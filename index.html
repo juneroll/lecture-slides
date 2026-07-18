@@ -4,29 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Industrial Organization & Competition — Lecture Series</title>
-
+ 
 <!--
 ================================================================================
 README — Industrial Organization & Competition Lecture Site
 ================================================================================
-
+ 
 WHAT THIS IS
 A single-file lecture site. Each week is a collapsible post in a
 reverse-chronological feed. Posts can embed live economics simulators
 (Supply & Demand, Monopoly, Cournot/Bertrand, Price Discrimination, Game
 Theory) via a simple mount() call inside the lecture's HTML body.
-
+ 
 Works two ways from the same file:
   (a) Pasted into a Claude.ai artifact — in-memory storage only.
   (b) Hosted as a static .html file on any web server — can persist
       accordion open/closed state across visits via localStorage.
-
+ 
 --------------------------------------------------------------------------------
 HOW TO ADD A NEW LECTURE POST
 --------------------------------------------------------------------------------
 Find the `LECTURES` array near the top of the <script> block (search for
 "LECTURE DATA — EDIT THIS ARRAY"). Add a new object to the array, e.g.:
-
+ 
   {
     id: 'lec6',                     // unique, no spaces — used for DOM ids
     number: 6,
@@ -37,103 +37,103 @@ Find the `LECTURES` array near the top of the <script> block (search for
       <p>Your lecture prose goes here as plain HTML — paragraphs, lists,
       headers (use h4/h5, not h1/h2 — those are reserved for site chrome),
       blockquotes, etc.</p>
-
+ 
       <div class="sim-frame">
         <div id="sim-cournot-lec6"></div>
         <p class="sim-caption">Figure 6.1 — Cournot equilibrium, 3 firms</p>
       </div>
     `
   }
-
+ 
 New lectures can be inserted anywhere in the array — the feed always
 sorts by `number` descending, so you don't need to manually reorder.
 The lecture with the highest number starts expanded; all others start
 collapsed. This is computed automatically, not hardcoded.
-
+ 
 --------------------------------------------------------------------------------
 HOW TO EMBED A SIMULATOR IN A LECTURE POST
 --------------------------------------------------------------------------------
 1. In bodyHTML, add an empty container div with a unique id:
      <div id="sim-myname-lec6"></div>
-
+ 
 2. After the LECTURES array is rendered, call the matching mount function.
    Do this inside the `SIMULATOR_MOUNTS` object (search for
    "SIMULATOR MOUNT CALLS — EDIT THIS OBJECT"), keyed by lecture id:
-
+ 
      lec6: () => {
        mountCournot('sim-cournot-lec6', { firms: 3, mc: 12 });
      }
-
+ 
    Each lecture id can mount as many simulators as it has containers for.
    Mounts run automatically the first time a lecture is expanded (lazy —
    collapsed lectures never pay the render cost), and are cached so
    re-expanding doesn't remount/reset the simulator's internal state.
-
+ 
 Available mount functions and config options:
-
+ 
   mountSupplyDemand(containerId, {
     demandIntercept, demandSlope,      // P = a - b*Q      (default 100, 1)
     supplyIntercept, supplySlope       // P = c + d*Q      (default 10, 1)
   })
-
+ 
   mountMonopoly(containerId, {
     demandIntercept, demandSlope,      // P = a - b*Q      (default 100, 1)
     mc                                  // constant MC     (default 20)
   })
-
+ 
   mountCournot(containerId, {
     demandIntercept, demandSlope,      // P = a - b*Q      (default 100, 1)
     mc,                                 // constant MC     (default 20)
     firms,                              // 2-5             (default 2)
     mode                                 // 'cournot' | 'bertrand'
   })
-
+ 
   mountPriceDiscrimination(containerId, {
     degree,                             // 1, 2, or 3      (default 3)
     seg1Intercept, seg1Slope,           // segment 1 demand
     seg2Intercept, seg2Slope,           // segment 2 demand
     mc
   })
-
+ 
   mountGameTheory(containerId, {
     preset,                             // 'prisoners' | 'chicken' | 'coordination' | 'stagHunt' | 'custom'
     rowLabels, colLabels,               // e.g. ['Cooperate','Defect']
     payoffs                             // [[ [r,c], [r,c] ], [ [r,c], [r,c] ]]  — [row][col] = [P1 payoff, P2 payoff]
   })
-
+ 
 --------------------------------------------------------------------------------
 HOW TO SWAP THE STORAGE LAYER (in-memory → localStorage for hosted deployment)
 --------------------------------------------------------------------------------
 Search for "STORAGE LAYER" in the <script> block. Near the bottom of that
 section you will find:
-
+ 
     const storage = new MemoryStorage();
     // const storage = new LocalStorageAdapter();
-
+ 
 To persist accordion state across page reloads when this file is hosted
 as a real static site, comment out the MemoryStorage line and uncomment
 the LocalStorageAdapter line. That is the only change required — every
 other part of the site reads and writes through the same `storage`
 interface (storage.get(key), storage.set(key, value)) regardless of
 which implementation is active.
-
+ 
 Do NOT enable LocalStorageAdapter inside a Claude.ai artifact — the
 artifact sandbox throws on any access to window.localStorage /
 window.sessionStorage, so this will break the page. Only switch it on
 when this file is being served from an actual web server.
-
+ 
 ================================================================================
 -->
-
+ 
 <style>
 /* ============================================================================
    DESIGN SYSTEM
    Palette: paper / ink / chalkboard-blue / ledger-brown / sage / grade-red
    Type: Source Serif 4 (display), Source Sans 3 (body), JetBrains Mono (data)
    ============================================================================ */
-
+ 
 @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
+ 
 :root {
   /* Palette */
   --paper:        #F7F5F0;
@@ -143,40 +143,40 @@ when this file is being served from an actual web server.
   --ink-faint:    #8A8680;
   --rule:         #DDD8CE;
   --rule-strong:  #C3BCAD;
-
+ 
   --blue:         #2B4C5C;
   --blue-soft:    #4A6E80;
   --blue-wash:    #E7EEF0;
-
+ 
   --brown:        #8B5A3C;
   --brown-wash:   #F2E9E1;
-
+ 
   --sage:         #5C7A5C;
   --sage-wash:    #E8EEE7;
-
+ 
   --red:          #B8433D;
   --red-wash:     #F5E7E5;
-
+ 
   /* Type */
   --font-display: 'Source Serif 4', Georgia, serif;
   --font-body:    'Source Sans 3', -apple-system, sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
-
+ 
   /* Layout */
   --content-width: 760px;
   --radius: 3px;
   --shadow-card: 0 1px 2px rgba(28,27,25,0.06), 0 4px 16px rgba(28,27,25,0.05);
 }
-
+ 
 * { box-sizing: border-box; }
-
+ 
 html { scroll-behavior: smooth; }
-
+ 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
-
+ 
 body {
   margin: 0;
   background: var(--paper);
@@ -186,29 +186,29 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
-
+ 
 ::selection { background: var(--blue-wash); color: var(--blue); }
-
+ 
 a { color: var(--blue); }
-
+ 
 /* Visible keyboard focus everywhere */
 :focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
   border-radius: 2px;
 }
-
+ 
 /* ---------------------------------------------------------------------------
    Site header
    --------------------------------------------------------------------------- */
-
+ 
 .site-header {
   border-bottom: 1px solid var(--rule);
   background:
     linear-gradient(var(--paper-raised), var(--paper-raised)) padding-box;
   position: relative;
 }
-
+ 
 .site-header::after {
   content: '';
   position: absolute;
@@ -221,13 +221,13 @@ a { color: var(--blue); }
   );
   opacity: 0.35;
 }
-
+ 
 .site-header-inner {
   max-width: var(--content-width);
   margin: 0 auto;
   padding: 3rem 1.5rem 2.25rem;
 }
-
+ 
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -239,7 +239,7 @@ a { color: var(--blue); }
   align-items: center;
   gap: 0.6em;
 }
-
+ 
 .eyebrow::before {
   content: '';
   width: 7px; height: 7px;
@@ -247,7 +247,7 @@ a { color: var(--blue); }
   border-radius: 50%;
   display: inline-block;
 }
-
+ 
 .site-title {
   font-family: var(--font-display);
   font-weight: 600;
@@ -256,24 +256,24 @@ a { color: var(--blue); }
   margin: 0 0 0.6rem;
   letter-spacing: -0.01em;
 }
-
+ 
 .site-desc {
   color: var(--ink-soft);
   font-size: 1.02rem;
   max-width: 54ch;
   margin: 0;
 }
-
+ 
 /* ---------------------------------------------------------------------------
    Lecture feed
    --------------------------------------------------------------------------- */
-
+ 
 .feed {
   max-width: var(--content-width);
   margin: 0 auto;
   padding: 2.5rem 1.5rem 6rem;
 }
-
+ 
 .lecture-post {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
@@ -282,7 +282,7 @@ a { color: var(--blue); }
   box-shadow: var(--shadow-card);
   overflow: hidden;
 }
-
+ 
 .lecture-header {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -297,9 +297,9 @@ a { color: var(--blue); }
   font: inherit;
   color: inherit;
 }
-
+ 
 .lecture-header:hover { background: var(--blue-wash); }
-
+ 
 .lecture-number {
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -309,9 +309,9 @@ a { color: var(--blue); }
   padding: 0.2rem 0.5rem;
   white-space: nowrap;
 }
-
+ 
 .lecture-titleblock { min-width: 0; }
-
+ 
 .lecture-title {
   font-family: var(--font-display);
   font-weight: 600;
@@ -319,7 +319,7 @@ a { color: var(--blue); }
   margin: 0 0 0.2rem;
   color: var(--ink);
 }
-
+ 
 .lecture-meta {
   font-size: 0.85rem;
   color: var(--ink-faint);
@@ -327,7 +327,7 @@ a { color: var(--blue); }
   gap: 0.6em;
   align-items: baseline;
 }
-
+ 
 .lecture-summary {
   font-size: 0.88rem;
   color: var(--ink-soft);
@@ -337,36 +337,36 @@ a { color: var(--blue); }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
+ 
 .lecture-chevron {
   width: 20px; height: 20px;
   flex-shrink: 0;
   color: var(--ink-faint);
   transition: transform 0.22s ease;
 }
-
+ 
 .lecture-post.expanded .lecture-chevron { transform: rotate(180deg); color: var(--blue); }
-
+ 
 .lecture-body {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.28s ease;
 }
-
+ 
 .lecture-post.expanded .lecture-body { grid-template-rows: 1fr; }
-
+ 
 .lecture-body-inner {
   overflow: hidden;
 }
-
+ 
 .lecture-content {
   padding: 0.25rem 1.35rem 1.6rem;
   border-top: 1px solid var(--rule);
   margin-top: 0.1rem;
 }
-
+ 
 .lecture-content > *:first-child { margin-top: 1.1rem; }
-
+ 
 .lecture-content p { margin: 0 0 1rem; color: var(--ink); }
 .lecture-content h4 {
   font-family: var(--font-display);
@@ -398,7 +398,7 @@ a { color: var(--blue); }
   padding: 0.1em 0.35em;
   border-radius: 2px;
 }
-
+ 
 .placeholder-tag {
   display: inline-block;
   font-family: var(--font-mono);
@@ -411,11 +411,11 @@ a { color: var(--blue); }
   padding: 0.15rem 0.45rem;
   margin-bottom: 0.9rem;
 }
-
+ 
 /* ---------------------------------------------------------------------------
    Simulator figure frame — shared shell every mount() renders into
    --------------------------------------------------------------------------- */
-
+ 
 .sim-frame {
   margin: 1.4rem 0 1.7rem;
   border: 1px solid var(--rule-strong);
@@ -423,7 +423,7 @@ a { color: var(--blue); }
   background: var(--paper);
   padding: 1.1rem 1.1rem 0.4rem;
 }
-
+ 
 .sim-caption {
   font-family: var(--font-mono);
   font-size: 0.74rem;
@@ -432,11 +432,11 @@ a { color: var(--blue); }
   margin: 0.5rem 0 0.9rem;
   letter-spacing: 0.02em;
 }
-
+ 
 .sim-root {
   font-family: var(--font-body);
 }
-
+ 
 .sim-controls {
   display: flex;
   flex-wrap: wrap;
@@ -445,7 +445,7 @@ a { color: var(--blue); }
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--rule);
 }
-
+ 
 .sim-control {
   display: flex;
   flex-direction: column;
@@ -453,7 +453,7 @@ a { color: var(--blue); }
   min-width: 150px;
   flex: 1 1 150px;
 }
-
+ 
 .sim-control label {
   font-size: 0.78rem;
   color: var(--ink-soft);
@@ -461,13 +461,13 @@ a { color: var(--blue); }
   justify-content: space-between;
   font-weight: 600;
 }
-
+ 
 .sim-control .sim-value {
   font-family: var(--font-mono);
   color: var(--blue);
   font-weight: 600;
 }
-
+ 
 .sim-control input[type="range"] {
   -webkit-appearance: none;
   width: 100%;
@@ -493,7 +493,7 @@ a { color: var(--blue); }
   border: 2px solid var(--paper-raised);
   box-shadow: 0 0 0 1px var(--blue);
 }
-
+ 
 .sim-toggle-group {
   display: flex;
   border: 1px solid var(--rule-strong);
@@ -513,7 +513,7 @@ a { color: var(--blue); }
 }
 .sim-toggle-btn:last-child { border-right: none; }
 .sim-toggle-btn.active { background: var(--blue); color: var(--paper-raised); }
-
+ 
 .sim-select {
   font-family: var(--font-body);
   font-size: 0.85rem;
@@ -523,7 +523,7 @@ a { color: var(--blue); }
   background: var(--paper-raised);
   color: var(--ink);
 }
-
+ 
 .sim-layout {
   display: grid;
   grid-template-columns: minmax(0,1fr) 200px;
@@ -533,14 +533,14 @@ a { color: var(--blue); }
 @media (max-width: 640px) {
   .sim-layout { grid-template-columns: 1fr; }
 }
-
+ 
 .sim-readouts {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.55rem;
   align-content: start;
 }
-
+ 
 .readout-card {
   border: 1px solid var(--rule);
   border-radius: 3px;
@@ -565,10 +565,10 @@ a { color: var(--blue); }
 .readout-value.accent-brown { color: var(--brown); }
 .readout-value.accent-sage  { color: var(--sage); }
 .readout-value.accent-red   { color: var(--red); }
-
+ 
 .sim-svg-wrap { width: 100%; }
 .sim-svg-wrap svg { width: 100%; height: auto; display: block; }
-
+ 
 .sim-legend {
   display: flex;
   flex-wrap: wrap;
@@ -582,7 +582,7 @@ a { color: var(--blue); }
 .sim-legend-item { display: flex; align-items: center; gap: 0.4em; }
 .sim-legend-swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
 .sim-legend-line { width: 16px; height: 2px; display: inline-block; flex-shrink: 0; }
-
+ 
 /* Game theory matrix */
 .gt-wrap { overflow-x: auto; }
 .gt-table { border-collapse: collapse; margin: 0 auto; }
@@ -646,7 +646,7 @@ a { color: var(--blue); }
   letter-spacing: 0.03em;
 }
 .gt-presets { margin-bottom: 0.9rem; }
-
+ 
 /* Utility */
 .visually-hidden {
   position: absolute;
@@ -655,7 +655,7 @@ a { color: var(--blue); }
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-
+ 
 @media (max-width: 560px) {
   .lecture-header { grid-template-columns: auto 1fr; }
   .lecture-chevron { grid-row: 1; grid-column: 2; justify-self: end; }
@@ -664,7 +664,7 @@ a { color: var(--blue); }
 </style>
 </head>
 <body>
-
+ 
 <header class="site-header">
   <div class="site-header-inner">
     <p class="eyebrow">University of Chicago · Booth &amp; Economics</p>
@@ -672,31 +672,31 @@ a { color: var(--blue); }
     <p class="site-desc">A weekly lecture series on market structure, strategic firm behavior, and the economics of imperfect competition — with live, adjustable models for every core result.</p>
   </div>
 </header>
-
+ 
 <main class="feed" id="feed" aria-label="Lecture posts">
   <!-- Lecture posts are rendered here by JS from the LECTURES array below. -->
 </main>
-
+ 
 <script>
 'use strict';
-
+ 
 /* ============================================================================
    STORAGE LAYER
    Swappable persistence. Only used for accordion open/closed state.
    See README above for how to switch implementations for hosted deployment.
    ============================================================================ */
-
+ 
 class StorageAdapter {
   get(key) { throw new Error('Not implemented'); }
   set(key, value) { throw new Error('Not implemented'); }
 }
-
+ 
 class MemoryStorage extends StorageAdapter {
   constructor() { super(); this._data = new Map(); }
   get(key) { return this._data.has(key) ? this._data.get(key) : null; }
   set(key, value) { this._data.set(key, value); return true; }
 }
-
+ 
 // Alternate implementation for hosted static-site deployment.
 // DO NOT enable inside a Claude.ai artifact — window.localStorage throws
 // in the artifact sandbox. Only uncomment when this file is served from
@@ -716,51 +716,51 @@ class LocalStorageAdapter extends StorageAdapter {
     } catch (e) { console.warn('LocalStorageAdapter.set failed', e); return false; }
   }
 }
-
+ 
 // --- Active storage implementation. Swap here (see README). ----------------
 const storage = new MemoryStorage();
 // const storage = new LocalStorageAdapter();
 // -----------------------------------------------------------------------------
-
-
+ 
+ 
 /* ============================================================================
    SHARED UTILITIES
    Math, formatting, and SVG-building helpers used by all five simulators.
    No simulator depends on another simulator — everything shared lives here.
    ============================================================================ */
-
+ 
 const Fmt = {
   price(v)  { return '$' + v.toFixed(2); },
   qty(v)    { return v.toFixed(2); },
   pct(v)    { return (v * 100).toFixed(1) + '%'; },
   num(v, d = 2) { return v.toFixed(d); },
 };
-
+ 
 const Econ = {
   // Linear demand P = a - b*Q. Returns Q at a given P.
   qFromDemand(a, b, p) { return (a - p) / b; },
   // Linear supply P = c + d*Q. Returns Q at a given P.
   qFromSupply(c, d, p) { return (p - c) / d; },
-
+ 
   // Competitive equilibrium for P=a-bQ vs P=c+dQ.
   equilibrium(a, b, c, d) {
     const q = (a - c) / (b + d);
     const p = a - b * q;
     return { q: Math.max(0, q), p };
   },
-
+ 
   consumerSurplus(a, p, q) { return 0.5 * q * (a - p); },
   producerSurplus(c, p, q) { return 0.5 * q * (p - c); },
-
+ 
   // Monopoly with linear demand P=a-bQ and constant MC=c.
   monopolyOutcome(a, b, c) {
     const q = Math.max(0, (a - c) / (2 * b));
     const p = a - b * q;
     return { q, p };
   },
-
+ 
   lernerIndex(p, mc) { return p > 0 ? (p - mc) / p : 0; },
-
+ 
   // Symmetric Cournot, n identical firms, P=a-bQ, MC=c.
   cournotEquilibrium(a, b, c, n) {
     const qEach = Math.max(0, (a - c) / (b * (n + 1)));
@@ -769,12 +769,12 @@ const Econ = {
     const profitEach = (p - c) * qEach;
     return { qEach, qTotal, p, profitEach };
   },
-
+ 
   // Cournot best-response: qi given rivals' combined output qRivals.
   cournotBestResponse(a, b, c, qRivals) {
     return Math.max(0, (a - c - b * qRivals) / (2 * b));
   },
-
+ 
   // Bertrand with homogeneous good, identical constant MC — price converges to MC.
   bertrandEquilibrium(a, b, c) {
     const p = c;
@@ -782,15 +782,15 @@ const Econ = {
     return { p, qTotal, profitEach: 0 };
   },
 };
-
+ 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-
+ 
 function svgEl(tag, attrs = {}) {
   const el = document.createElementNS(SVG_NS, tag);
   for (const k in attrs) el.setAttribute(k, attrs[k]);
   return el;
 }
-
+ 
 // Builds a reusable chart scaffold: axes, gridlines, and a clipped plot
 // area. Returns { svg, plot, xScale, yScale, W, H, margin } where xScale/
 // yScale convert data units -> pixel units within the plot area.
@@ -798,12 +798,12 @@ function buildChart({ width = 640, height = 380, xMax, yMax, xLabel, yLabel, mar
   const m = margin || { top: 18, right: 24, bottom: 46, left: 62 };
   const plotW = width - m.left - m.right;
   const plotH = height - m.top - m.bottom;
-
+ 
   const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
-
+ 
   const xScale = (xVal) => m.left + (xVal / xMax) * plotW;
   const yScale = (yVal) => m.top + plotH - (yVal / yMax) * plotH;
-
+ 
   // Gridlines
   const gridGroup = svgEl('g', { class: 'chart-grid' });
   const NX = 5, NY = 5;
@@ -822,7 +822,7 @@ function buildChart({ width = 640, height = 380, xMax, yMax, xLabel, yLabel, mar
     }));
   }
   svg.appendChild(gridGroup);
-
+ 
   // Axes
   const axesGroup = svgEl('g', { class: 'chart-axes' });
   axesGroup.appendChild(svgEl('line', {
@@ -834,7 +834,7 @@ function buildChart({ width = 640, height = 380, xMax, yMax, xLabel, yLabel, mar
     stroke: 'var(--ink-faint)', 'stroke-width': 1.3,
   }));
   svg.appendChild(axesGroup);
-
+ 
   // Axis tick labels (numeric, mono)
   const tickGroup = svgEl('g', { class: 'chart-ticks' });
   for (let i = 0; i <= NX; i++) {
@@ -856,7 +856,7 @@ function buildChart({ width = 640, height = 380, xMax, yMax, xLabel, yLabel, mar
     tickGroup.appendChild(t);
   }
   svg.appendChild(tickGroup);
-
+ 
   // Axis titles
   if (xLabel) {
     const t = svgEl('text', {
@@ -875,21 +875,21 @@ function buildChart({ width = 640, height = 380, xMax, yMax, xLabel, yLabel, mar
     t.textContent = yLabel;
     svg.appendChild(t);
   }
-
+ 
   const plot = svgEl('g', { class: 'chart-plot' });
   svg.appendChild(plot);
-
+ 
   return { svg, plot, xScale, yScale, width, height, margin: m, plotW, plotH };
 }
-
+ 
 function linePath(points) {
   return points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
 }
-
+ 
 function polygonPoints(points) {
   return points.map(p => `${p[0]},${p[1]}`).join(' ');
 }
-
+ 
 // Builds one labeled slider control. Returns the wrapping element; caller
 // attaches an 'input' listener to the inner <input>.
 function buildSliderControl({ id, label, min, max, step, value, formatValue }) {
@@ -903,7 +903,7 @@ function buildSliderControl({ id, label, min, max, step, value, formatValue }) {
   `;
   return wrap;
 }
-
+ 
 function buildReadoutCard({ label, value, accent }) {
   const div = document.createElement('div');
   div.className = 'readout-card';
@@ -913,7 +913,7 @@ function buildReadoutCard({ label, value, accent }) {
   `;
   return div;
 }
-
+ 
 function buildLegend(items) {
   // items: [{ type: 'line'|'swatch', color, label }]
   const el = document.createElement('div');
@@ -926,33 +926,108 @@ function buildLegend(items) {
   `).join('');
   return el;
 }
-
-
+ 
+ 
 /* ============================================================================
    LECTURE DATA — EDIT THIS ARRAY
    Add new lecture posts here. See README at the top of this file for the
    exact object shape and how simulators get embedded/mounted.
    ============================================================================ */
-
+ 
 const LECTURES = [
   {
     id: 'lec1',
     number: 1,
-    title: '[Lecture 1 title — e.g. "Course Overview & What Counts as a Market"]',
+    title: 'Course Overview & What Counts as a Market',
     date: '2026-01-05',
-    summary: '[One-line placeholder summary — replace with your real teaser.]',
+    summary: 'Why market structure matters, and a first look at the competitive benchmark using the Supply & Demand model.',
     bodyHTML: `
-      <span class="placeholder-tag">Placeholder lecture — replace with real notes</span>
-      <p>[This is placeholder body text demonstrating the structure of a lecture
-      post. Replace this paragraph, and everything below it, with your actual
-      lecture content. You can use plain HTML here: paragraphs, lists,
-      blockquotes, <code>h4</code>/<code>h5</code> subheadings, and simulator
-      embeds.]</p>
-      <h4>[Example subheading]</h4>
-      <p>[Example body paragraph under a subheading. Delete this whole lecture
-      object once you no longer need the pattern reference, or just overwrite
-      the fields directly — the array position doesn't matter, ordering is
-      driven entirely by the <code>number</code> field.]</p>
+      <p>Industrial organization studies how firms behave when they are <em>not</em>
+      price-takers operating in a frictionless void — how market structure,
+      strategic interaction, and firm conduct jointly determine prices,
+      quantities, and welfare. Before we can say anything interesting about
+      monopoly, oligopoly, or price discrimination, we need a benchmark to
+      compare them against. That benchmark is the competitive market you
+      already know from principles: many small firms, a homogeneous good,
+      free entry and exit, and price-taking behavior on both sides.</p>
+ 
+      <p>This course is organized around a single recurring question: <strong>relative
+      to the competitive benchmark, does a given market structure produce more
+      output, less output, or the same output — and who captures the resulting
+      surplus?</strong> Every model we build for the rest of the term is, in one
+      way or another, an answer to that question under a different set of
+      assumptions about the number of firms, the nature of competition
+      (price vs. quantity), the information firms have about their customers,
+      and the strategic interdependence between competitors.</p>
+ 
+      <h4>The three pillars of the field</h4>
+      <p>We will organize the term around three broad questions, corresponding
+      roughly to the three parts of the classic <em>structure–conduct–performance</em>
+      paradigm:</p>
+      <ul>
+        <li><strong>Market structure.</strong> How many firms are there, how
+        differentiated is the product, and how costly is entry? This is
+        the subject of Lectures 2–3, where we study the extremes: perfect
+        competition and monopoly.</li>
+        <li><strong>Firm conduct.</strong> Given a structure, how do firms
+        actually set prices and quantities, and how do they respond to
+        rivals? This occupies the middle of the course: price discrimination
+        (Lecture 4), and quantity vs. price competition under oligopoly
+        (Lecture 5).</li>
+        <li><strong>Strategic foundations.</strong> Why do firms choose the
+        conduct they choose? Game theory (Lecture 6) gives us the formal
+        machinery — best responses and Nash equilibrium — that underlies
+        every oligopoly model we build.</li>
+      </ul>
+ 
+      <h4>The competitive benchmark, live</h4>
+      <p>Rather than just asserting what happens in a competitive market, let's
+      build it and poke at it. The simulator below implements the standard
+      linear supply-and-demand model: a downward-sloping demand curve
+      <code>P = a − bQ</code> and an upward-sloping supply curve
+      <code>P = c + dQ</code>. The equilibrium price and quantity are wherever
+      these two curves cross — the point at which the marginal buyer's
+      willingness to pay exactly equals the marginal seller's cost.</p>
+ 
+      <div class="sim-frame">
+        <div id="sim-sd-lec1"></div>
+        <p class="sim-caption">Figure 1.1 — Competitive equilibrium with adjustable demand/supply shifters, a per-unit tax, and price controls</p>
+      </div>
+ 
+      <p>Three exercises to try directly in the figure above, each of which
+      previews a theme we'll return to later in the course:</p>
+      <ul>
+        <li><strong>Shift demand or supply</strong> and watch consumer surplus
+        (sage) and producer surplus (brown) reallocate. Nothing here should
+        surprise you from principles — but notice that the <em>total</em>
+        surplus (CS + PS) is always maximized at the unregulated, untaxed
+        equilibrium. That "no deadweight loss" result is the thing every
+        later model in this course will fail to replicate in some way, and
+        the whole point of IO is characterizing exactly how and why it fails.</li>
+        <li><strong>Turn on a per-unit tax.</strong> A wedge appears between
+        what buyers pay and what sellers receive, quantity falls below the
+        efficient level, and a red deadweight-loss triangle appears. This is
+        your first worked example of a "wedge" between price and marginal
+        cost — precisely the same shape of triangle we will see again in
+        Lecture 3 when monopoly creates its own wedge, not through a tax but
+        through market power.</li>
+        <li><strong>Impose a price ceiling</strong> below the equilibrium
+        price (or a price floor above it). Quantity falls to the "short
+        side" of the market, a shortage or surplus opens up, and deadweight
+        loss reappears — this time from a quantity restriction rather than a
+        price wedge. Compare the size and shape of this DWL triangle to the
+        tax case: same underlying logic, different policy instrument.</li>
+      </ul>
+ 
+      <h4>Looking ahead</h4>
+      <p>Every subsequent lecture will modify exactly one assumption of this
+      benchmark model — a single seller instead of many (Lecture 3), a seller
+      who can charge different prices to different buyers (Lecture 4), a
+      small number of interacting sellers (Lecture 5) — and ask what happens
+      to price, quantity, and the split of surplus. Keep this figure's demand
+      curve, its surplus triangles, and its deadweight-loss wedge in mind:
+      they are the yardstick against which every market structure in this
+      course will be measured.</p>
     `
   },
   {
@@ -1039,15 +1114,18 @@ const LECTURES = [
     `
   },
 ];
-
-
+ 
+ 
 /* ============================================================================
    SIMULATOR MOUNT CALLS — EDIT THIS OBJECT
    Keyed by lecture id. Each function runs once, the first time that
    lecture is expanded (lazy mounting — see mountLectureSimulators below).
    ============================================================================ */
-
+ 
 const SIMULATOR_MOUNTS = {
+  lec1: () => {
+    mountSupplyDemand('sim-sd-lec1', {});
+  },
   lec2: () => {
     mountSupplyDemand('sim-sd-lec2', {});
   },
@@ -1064,12 +1142,12 @@ const SIMULATOR_MOUNTS = {
     mountGameTheory('sim-gt-lec6', { preset: 'prisoners' });
   },
 };
-
+ 
 // Tracks which lectures have already had their simulators mounted, so
 // re-collapsing/re-expanding a post never remounts (and never resets)
 // a simulator's live internal state.
 const _mountedLectures = new Set();
-
+ 
 function mountLectureSimulators(lectureId) {
   if (_mountedLectures.has(lectureId)) return;
   const mountFn = SIMULATOR_MOUNTS[lectureId];
@@ -1078,43 +1156,43 @@ function mountLectureSimulators(lectureId) {
     _mountedLectures.add(lectureId);
   }
 }
-
-
+ 
+ 
 /* ============================================================================
    ACCORDION / FEED RENDERING ENGINE
    ============================================================================ */
-
+ 
 function formatLectureDate(iso) {
   const d = new Date(iso + 'T00:00:00');
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
-
+ 
 const CHEVRON_SVG = `
   <svg class="lecture-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">
     <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 `;
-
+ 
 function renderFeed() {
   const feedEl = document.getElementById('feed');
   const sorted = [...LECTURES].sort((a, b) => b.number - a.number);
   const mostRecentId = sorted.length ? sorted[0].id : null;
-
+ 
   const storedState = storage.get('accordionState') || {};
-
+ 
   feedEl.innerHTML = '';
-
+ 
   sorted.forEach((lecture) => {
     // Default: most recent expanded, everything else collapsed — unless
     // we have explicit stored state (relevant when LocalStorageAdapter is
     // active on a hosted deployment) for this specific lecture id.
     const hasStored = Object.prototype.hasOwnProperty.call(storedState, lecture.id);
     const isExpanded = hasStored ? !!storedState[lecture.id] : (lecture.id === mostRecentId);
-
+ 
     const article = document.createElement('article');
     article.className = 'lecture-post' + (isExpanded ? ' expanded' : '');
     article.id = 'post-' + lecture.id;
-
+ 
     article.innerHTML = `
       <button class="lecture-header" aria-expanded="${isExpanded}" aria-controls="body-${lecture.id}" id="header-${lecture.id}">
         <span class="lecture-number">Lec. ${lecture.number}</span>
@@ -1133,12 +1211,12 @@ function renderFeed() {
         </div>
       </div>
     `;
-
+ 
     feedEl.appendChild(article);
-
+ 
     const headerBtn = article.querySelector('.lecture-header');
     headerBtn.addEventListener('click', () => toggleLecture(lecture.id));
-
+ 
     // If starting expanded, mount its simulators immediately (post-append,
     // so containers exist in the DOM for mount() calls to find).
     if (isExpanded) {
@@ -1146,36 +1224,36 @@ function renderFeed() {
     }
   });
 }
-
+ 
 function toggleLecture(lectureId) {
   const article = document.getElementById('post-' + lectureId);
   if (!article) return;
   const headerBtn = document.getElementById('header-' + lectureId);
   const nowExpanded = !article.classList.contains('expanded');
-
+ 
   article.classList.toggle('expanded', nowExpanded);
   headerBtn.setAttribute('aria-expanded', String(nowExpanded));
-
+ 
   if (nowExpanded) {
     mountLectureSimulators(lectureId);
   }
-
+ 
   const stored = storage.get('accordionState') || {};
   stored[lectureId] = nowExpanded;
   storage.set('accordionState', stored);
 }
-
+ 
 renderFeed();
-
-
+ 
+ 
 /* ============================================================================
    SIMULATOR 1 — SUPPLY & DEMAND
    ============================================================================ */
-
+ 
 function mountSupplyDemand(containerId, config = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
+ 
   const state = {
     demandIntercept: config.demandIntercept ?? 100,
     demandSlope: config.demandSlope ?? 1,
@@ -1188,7 +1266,7 @@ function mountSupplyDemand(containerId, config = {}) {
     floor: null,      // null = inactive
     controlMode: 'none', // 'none' | 'ceiling' | 'floor'
   };
-
+ 
   const root = document.createElement('div');
   root.className = 'sim-root';
   root.innerHTML = `
@@ -1225,7 +1303,7 @@ function mountSupplyDemand(containerId, config = {}) {
     <div data-role="legend"></div>
   `;
   container.appendChild(root);
-
+ 
   const el = (sel) => root.querySelector(sel);
   const dShiftInput = el(`#${containerId}-dshift`);
   const sShiftInput = el(`#${containerId}-sshift`);
@@ -1236,19 +1314,19 @@ function mountSupplyDemand(containerId, config = {}) {
   const readoutsWrap = el('[data-role="readouts"]');
   const legendWrap = el('[data-role="legend"]');
   const toggleBtns = root.querySelectorAll('.sim-toggle-btn');
-
+ 
   function computeAndRender() {
     const a = state.demandIntercept + state.demandShift;
     const b = state.demandSlope;
     const c = state.supplyIntercept + state.supplyShift;
     const d = state.supplySlope;
     const t = state.tax;
-
+ 
     // Untaxed / uncontrolled equilibrium (used as the efficient benchmark)
     const eqFree = Econ.equilibrium(a, b, c, d);
-
+ 
     let qTransacted, pConsumer, pProducer, dwl = 0, controlActive = false, controlBindLine = null;
-
+ 
     if (state.controlMode === 'ceiling' && state.ceiling !== null) {
       const ceilingP = state.ceiling;
       if (ceilingP < eqFree.p) {
@@ -1289,15 +1367,15 @@ function mountSupplyDemand(containerId, config = {}) {
       pConsumer = eqFree.p;
       pProducer = eqFree.p;
     }
-
+ 
     const cs = Econ.consumerSurplus(a, pConsumer, qTransacted);
     const ps = Econ.producerSurplus(c, pProducer, qTransacted);
     const taxRevenue = t > 0 ? t * qTransacted : 0;
-
+ 
     renderChart({ a, b, c, d, t, eqFree, qTransacted, pConsumer, pProducer, controlActive, controlBindLine, controlMode: state.controlMode });
     renderReadouts({ qTransacted, pConsumer, pProducer, cs, ps, dwl, taxRevenue, t, controlActive });
   }
-
+ 
   function renderReadouts({ qTransacted, pConsumer, pProducer, cs, ps, dwl, taxRevenue, t, controlActive }) {
     readoutsWrap.innerHTML = '';
     const priceLabel = t > 0 ? 'Price (consumer / producer)' : 'Equilibrium price P*';
@@ -1313,31 +1391,31 @@ function mountSupplyDemand(containerId, config = {}) {
       readoutsWrap.appendChild(buildReadoutCard({ label: 'Tax revenue', value: Fmt.price(taxRevenue) }));
     }
   }
-
+ 
   function renderChart({ a, b, c, d, t, eqFree, qTransacted, pConsumer, pProducer, controlActive, controlBindLine, controlMode }) {
     const xMax = Math.max(eqFree.q, qTransacted) * 1.7 + 5;
     const yMax = Math.max(a, pConsumer) * 1.08;
-
+ 
     const chart = buildChart({ width: 640, height: 400, xMax, yMax, xLabel: 'Quantity (Q)', yLabel: 'Price (P)' });
     chartWrap.innerHTML = '';
     chartWrap.appendChild(chart.svg);
     const { plot, xScale, yScale } = chart;
-
+ 
     // Demand line: from (0, a) to (xMax_intersectQ, 0)
     const qAtZeroD = a / b;
     const demandPts = [[xScale(0), yScale(Math.min(a, yMax))], [xScale(Math.min(qAtZeroD, xMax)), yScale(Math.max(a - b * Math.min(qAtZeroD, xMax), 0))]];
     plot.appendChild(svgEl('path', { d: linePath(demandPts), stroke: 'var(--blue)', 'stroke-width': 2.25, fill: 'none' }));
-
+ 
     // Supply line: from (0, c) to (xMax, c + d*xMax)
     const supplyPts = [[xScale(0), yScale(Math.min(c, yMax))], [xScale(xMax), yScale(Math.min(c + d * xMax, yMax))]];
     plot.appendChild(svgEl('path', { d: linePath(supplyPts), stroke: 'var(--brown)', 'stroke-width': 2.25, fill: 'none' }));
-
+ 
     // Post-tax supply (shifted up by t), shown dashed, only when tax > 0
     if (t > 0) {
       const supplyTaxedPts = [[xScale(0), yScale(Math.min(c + t, yMax))], [xScale(xMax), yScale(Math.min(c + t + d * xMax, yMax))]];
       plot.appendChild(svgEl('path', { d: linePath(supplyTaxedPts), stroke: 'var(--brown)', 'stroke-width': 1.6, 'stroke-dasharray': '5,4', fill: 'none', opacity: 0.75 }));
     }
-
+ 
     // Surplus shading
     const originPx = [xScale(0), yScale(0)];
     if (qTransacted > 0.01) {
@@ -1348,7 +1426,7 @@ function mountSupplyDemand(containerId, config = {}) {
         [xScale(0), yScale(pConsumer)],
       ];
       plot.appendChild(svgEl('polygon', { points: polygonPoints(csPoly), fill: 'var(--sage)', opacity: 0.28 }));
-
+ 
       // Producer surplus: triangle between supply curve and pProducer, from Q=0 to Q=qTransacted
       const psPoly = [
         [xScale(0), yScale(c)],
@@ -1357,7 +1435,7 @@ function mountSupplyDemand(containerId, config = {}) {
       ];
       plot.appendChild(svgEl('polygon', { points: polygonPoints(psPoly), fill: 'var(--brown)', opacity: 0.28 }));
     }
-
+ 
     // DWL shading: triangle between the two curves, from qTransacted to eqFree.q
     if (Math.abs(eqFree.q - qTransacted) > 0.01) {
       let dwlPoly;
@@ -1386,10 +1464,10 @@ function mountSupplyDemand(containerId, config = {}) {
         plot.appendChild(svgEl('polygon', { points: polygonPoints(dwlPoly), fill: 'var(--red)', opacity: 0.32 }));
       }
     }
-
+ 
     // Equilibrium construction lines (dashed) to the transacted point
     plot.appendChild(svgEl('line', { x1: xScale(qTransacted), y1: yScale(0), x2: xScale(qTransacted), y2: yScale(Math.max(pConsumer, pProducer)), stroke: 'var(--ink-faint)', 'stroke-width': 1, 'stroke-dasharray': '3,3' }));
-
+ 
     // Control price horizontal line
     if (controlActive) {
       const cp = controlMode === 'ceiling' ? pConsumer : pConsumer;
@@ -1403,13 +1481,13 @@ function mountSupplyDemand(containerId, config = {}) {
         plot.appendChild(labelT);
       }
     }
-
+ 
     // Equilibrium point marker
     plot.appendChild(svgEl('circle', { cx: xScale(qTransacted), cy: yScale(pConsumer), r: 4, fill: 'var(--ink)' }));
     if (Math.abs(pConsumer - pProducer) > 0.01) {
       plot.appendChild(svgEl('circle', { cx: xScale(qTransacted), cy: yScale(pProducer), r: 4, fill: 'var(--ink)' }));
     }
-
+ 
     // Curve end labels
     const dLabel = svgEl('text', { x: xScale(Math.min(qAtZeroD, xMax)) + 6, y: yScale(Math.max(a - b * Math.min(qAtZeroD, xMax), 0)) + 4, 'font-family': 'var(--font-body)', 'font-size': '11', fill: 'var(--blue)', 'font-weight': '600' });
     dLabel.textContent = 'D';
@@ -1417,7 +1495,7 @@ function mountSupplyDemand(containerId, config = {}) {
     const sLabel = svgEl('text', { x: xScale(xMax) - 14, y: yScale(Math.min(c + d * xMax, yMax)) - 6, 'font-family': 'var(--font-body)', 'font-size': '11', fill: 'var(--brown)', 'font-weight': '600' });
     sLabel.textContent = 'S';
     plot.appendChild(sLabel);
-
+ 
     legendWrap.innerHTML = '';
     legendWrap.appendChild(buildLegend([
       { type: 'line', color: 'var(--blue)', label: 'Demand' },
@@ -1427,7 +1505,7 @@ function mountSupplyDemand(containerId, config = {}) {
       { type: 'swatch', color: 'var(--red)', label: 'Deadweight loss' },
     ]));
   }
-
+ 
   dShiftInput.addEventListener('input', (e) => {
     state.demandShift = Number(e.target.value);
     el('[data-role="v-dshift"]').textContent = (state.demandShift >= 0 ? '+' : '') + state.demandShift;
@@ -1471,25 +1549,25 @@ function mountSupplyDemand(containerId, config = {}) {
       computeAndRender();
     });
   });
-
+ 
   computeAndRender();
 }
-
-
+ 
+ 
 /* ============================================================================
    SIMULATOR 2 — MONOPOLY & DEADWEIGHT LOSS
    ============================================================================ */
-
+ 
 function mountMonopoly(containerId, config = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
+ 
   const state = {
     demandIntercept: config.demandIntercept ?? 100,
     demandSlope: config.demandSlope ?? 1,
     mc: config.mc ?? 20,
   };
-
+ 
   const root = document.createElement('div');
   root.className = 'sim-root';
   root.innerHTML = `
@@ -1506,18 +1584,18 @@ function mountMonopoly(containerId, config = {}) {
     <div data-role="legend"></div>
   `;
   container.appendChild(root);
-
+ 
   const el = (sel) => root.querySelector(sel);
   const mcInput = el(`#${containerId}-mc`);
   const chartWrap = el('[data-role="chart"]');
   const readoutsWrap = el('[data-role="readouts"]');
   const legendWrap = el('[data-role="legend"]');
-
+ 
   function computeAndRender() {
     const a = state.demandIntercept;
     const b = state.demandSlope;
     const mc = state.mc;
-
+ 
     const mono = Econ.monopolyOutcome(a, b, mc);
     const comp = { q: Math.max(0, (a - mc) / b), p: mc };
     const lerner = Econ.lernerIndex(mono.p, mc);
@@ -1525,11 +1603,11 @@ function mountMonopoly(containerId, config = {}) {
     const dwl = 0.5 * (comp.q - mono.q) * (mono.p - mc);
     const csMono = Econ.consumerSurplus(a, mono.p, mono.q);
     const psMono = mono.q * (mono.p - mc); // rectangle: profit = producer surplus here since MC is constant
-
+ 
     renderReadouts({ mono, comp, lerner, markup, dwl, csMono, psMono });
     renderChart({ a, b, mc, mono, comp });
   }
-
+ 
   function renderReadouts({ mono, comp, lerner, markup, dwl, csMono, psMono }) {
     readoutsWrap.innerHTML = '';
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Monopoly price Pm', value: Fmt.price(mono.p), accent: 'blue' }));
@@ -1540,59 +1618,59 @@ function mountMonopoly(containerId, config = {}) {
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Deadweight loss', value: Fmt.price(dwl), accent: 'red' }));
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Producer profit', value: Fmt.price(psMono), accent: 'sage' }));
   }
-
+ 
   function renderChart({ a, b, mc, mono, comp }) {
     const xMax = comp.q * 1.25 + 5;
     const yMax = a * 1.05;
-
+ 
     const chart = buildChart({ width: 640, height: 400, xMax, yMax, xLabel: 'Quantity (Q)', yLabel: 'Price / Cost (P)' });
     chartWrap.innerHTML = '';
     chartWrap.appendChild(chart.svg);
     const { plot, xScale, yScale } = chart;
-
+ 
     // Demand: P = a - bQ
     const qAtZeroD = a / b;
     plot.appendChild(svgEl('path', {
       d: linePath([[xScale(0), yScale(a)], [xScale(Math.min(qAtZeroD, xMax)), yScale(Math.max(a - b * Math.min(qAtZeroD, xMax), 0))]]),
       stroke: 'var(--blue)', 'stroke-width': 2.25, fill: 'none',
     }));
-
+ 
     // MR: P = a - 2bQ (twice the slope)
     const qAtZeroMR = a / (2 * b);
     plot.appendChild(svgEl('path', {
       d: linePath([[xScale(0), yScale(a)], [xScale(Math.min(qAtZeroMR, xMax)), yScale(Math.max(a - 2 * b * Math.min(qAtZeroMR, xMax), 0))]]),
       stroke: 'var(--sage)', 'stroke-width': 2, fill: 'none',
     }));
-
+ 
     // MC: horizontal line at mc
     plot.appendChild(svgEl('line', { x1: xScale(0), y1: yScale(mc), x2: xScale(xMax), y2: yScale(mc), stroke: 'var(--brown)', 'stroke-width': 2, 'stroke-dasharray': '6,3' }));
-
+ 
     // DWL triangle: between demand and MC, from Qm to Qc
     plot.appendChild(svgEl('polygon', {
       points: polygonPoints([[xScale(mono.q), yScale(mono.p)], [xScale(mono.q), yScale(mc)], [xScale(comp.q), yScale(mc)]]),
       fill: 'var(--red)', opacity: 0.32,
     }));
-
+ 
     // Producer profit rectangle: (Pm - mc) x Qm
     plot.appendChild(svgEl('polygon', {
       points: polygonPoints([[xScale(0), yScale(mono.p)], [xScale(mono.q), yScale(mono.p)], [xScale(mono.q), yScale(mc)], [xScale(0), yScale(mc)]]),
       fill: 'var(--sage)', opacity: 0.22,
     }));
-
+ 
     // Consumer surplus triangle at monopoly outcome
     plot.appendChild(svgEl('polygon', {
       points: polygonPoints([[xScale(0), yScale(a)], [xScale(mono.q), yScale(mono.p)], [xScale(0), yScale(mono.p)]]),
       fill: 'var(--blue)', opacity: 0.18,
     }));
-
+ 
     // Construction lines
     plot.appendChild(svgEl('line', { x1: xScale(mono.q), y1: yScale(0), x2: xScale(mono.q), y2: yScale(mono.p), stroke: 'var(--ink-faint)', 'stroke-width': 1, 'stroke-dasharray': '3,3' }));
     plot.appendChild(svgEl('line', { x1: xScale(comp.q), y1: yScale(0), x2: xScale(comp.q), y2: yScale(mc), stroke: 'var(--ink-faint)', 'stroke-width': 1, 'stroke-dasharray': '3,3' }));
-
+ 
     // Points
     plot.appendChild(svgEl('circle', { cx: xScale(mono.q), cy: yScale(mono.p), r: 4, fill: 'var(--ink)' }));
     plot.appendChild(svgEl('circle', { cx: xScale(comp.q), cy: yScale(mc), r: 4, fill: 'var(--ink)' }));
-
+ 
     // Labels
     const dLabel = svgEl('text', { x: xScale(Math.min(qAtZeroD, xMax)) - 14, y: yScale(Math.max(a - b * Math.min(qAtZeroD, xMax), 0)) - 8, 'font-family': 'var(--font-body)', 'font-size': '11', fill: 'var(--blue)', 'font-weight': '600' });
     dLabel.textContent = 'D';
@@ -1603,7 +1681,7 @@ function mountMonopoly(containerId, config = {}) {
     const mcLabel = svgEl('text', { x: xScale(xMax) - 24, y: yScale(mc) - 6, 'font-family': 'var(--font-body)', 'font-size': '11', fill: 'var(--brown)', 'font-weight': '600' });
     mcLabel.textContent = 'MC';
     plot.appendChild(mcLabel);
-
+ 
     legendWrap.innerHTML = '';
     legendWrap.appendChild(buildLegend([
       { type: 'line', color: 'var(--blue)', label: 'Demand' },
@@ -1612,19 +1690,19 @@ function mountMonopoly(containerId, config = {}) {
       { type: 'swatch', color: 'var(--red)', label: 'Deadweight loss' },
     ]));
   }
-
+ 
   computeAndRender();
 }
-
-
+ 
+ 
 /* ============================================================================
    SIMULATOR 3 — COURNOT / BERTRAND OLIGOPOLY
    ============================================================================ */
-
+ 
 function mountCournot(containerId, config = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
+ 
   const state = {
     demandIntercept: config.demandIntercept ?? 100,
     demandSlope: config.demandSlope ?? 1,
@@ -1632,7 +1710,7 @@ function mountCournot(containerId, config = {}) {
     firms: config.firms ?? 2,
     mode: config.mode ?? 'cournot',
   };
-
+ 
   const root = document.createElement('div');
   root.className = 'sim-root';
   root.innerHTML = `
@@ -1660,7 +1738,7 @@ function mountCournot(containerId, config = {}) {
     <div data-role="legend"></div>
   `;
   container.appendChild(root);
-
+ 
   const el = (sel) => root.querySelector(sel);
   const firmsInput = el(`#${containerId}-firms`);
   const mcInput = el(`#${containerId}-mc`);
@@ -1668,13 +1746,13 @@ function mountCournot(containerId, config = {}) {
   const readoutsWrap = el('[data-role="readouts"]');
   const legendWrap = el('[data-role="legend"]');
   const modeBtns = root.querySelectorAll('.sim-toggle-btn');
-
+ 
   function computeAndRender() {
     const a = state.demandIntercept;
     const b = state.demandSlope;
     const mc = state.mc;
     const n = state.firms;
-
+ 
     if (state.mode === 'cournot') {
       const result = Econ.cournotEquilibrium(a, b, mc, n);
       renderReadoutsCournot(result, n);
@@ -1685,7 +1763,7 @@ function mountCournot(containerId, config = {}) {
       renderBertrandChart({ a, b, mc, n, result });
     }
   }
-
+ 
   function renderReadoutsCournot(result, n) {
     readoutsWrap.innerHTML = '';
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Equilibrium price', value: Fmt.price(result.p), accent: 'blue' }));
@@ -1694,7 +1772,7 @@ function mountCournot(containerId, config = {}) {
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Profit per firm', value: Fmt.price(result.profitEach), accent: 'sage' }));
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Industry profit', value: Fmt.price(result.profitEach * n), accent: 'brown' }));
   }
-
+ 
   function renderReadoutsBertrand(result, n) {
     readoutsWrap.innerHTML = '';
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Equilibrium price (= MC)', value: Fmt.price(result.p), accent: 'blue' }));
@@ -1703,7 +1781,7 @@ function mountCournot(containerId, config = {}) {
     readoutsWrap.appendChild(buildReadoutCard({ label: 'Profit per firm', value: Fmt.price(result.profitEach), accent: 'sage' }));
     readoutsWrap.appendChild(buildReadoutCard({ label: '', value: '' }).outerHTML ? (() => { const d = document.createElement('div'); return d; })() : null);
   }
-
+ 
   // Signature visual: Cournot best-response curves. For n=2 this is the
   // classic reaction-function crossing diagram. For n>2 we plot firm 1's
   // best response against "total rivals' output" on the same axes, with
@@ -1714,7 +1792,7 @@ function mountCournot(containerId, config = {}) {
     chartWrap.innerHTML = '';
     chartWrap.appendChild(chart.svg);
     const { plot, xScale, yScale } = chart;
-
+ 
     // Firm i's best response: qi = (a - mc - b*Qrivals) / (2b), for Qrivals in [0, (a-mc)/b]
     const brPoints = [];
     const steps = 60;
@@ -1724,7 +1802,7 @@ function mountCournot(containerId, config = {}) {
       brPoints.push([xScale(qRivals), yScale(qi)]);
     }
     plot.appendChild(svgEl('path', { d: linePath(brPoints), stroke: 'var(--blue)', 'stroke-width': 2.25, fill: 'none' }));
-
+ 
     // For n=2, the symmetric mirror (Firm 2's BR as a function of Firm 1's q)
     // is the reflection across the 45° line — draw it as the second reaction curve.
     if (n === 2) {
@@ -1735,38 +1813,38 @@ function mountCournot(containerId, config = {}) {
         brPoints2Data.push([xScale(qi), yScale(qRivals)]);
       }
       plot.appendChild(svgEl('path', { d: linePath(brPoints2Data), stroke: 'var(--brown)', 'stroke-width': 2.25, fill: 'none' }));
-
+ 
       const label2 = svgEl('text', { x: xScale(result.qEach * 1.5), y: yScale(Econ.cournotBestResponse(a, b, mc, result.qEach * 1.5)) - 8, 'font-family': 'var(--font-body)', 'font-size': '11', fill: 'var(--brown)', 'font-weight': '600' });
       label2.textContent = "Firm 2's best response";
       plot.appendChild(label2);
     }
-
+ 
     // 45° reference line (symmetric output line)
     plot.appendChild(svgEl('line', { x1: xScale(0), y1: yScale(0), x2: xScale(totalMax), y2: yScale(totalMax), stroke: 'var(--rule-strong)', 'stroke-width': 1, 'stroke-dasharray': '2,3' }));
-
+ 
     // Construction lines to equilibrium (dashed, "hand-annotated" feel)
     const eqX = n === 2 ? result.qEach : result.qTotal - result.qEach;
     const eqY = result.qEach;
     plot.appendChild(svgEl('line', { x1: xScale(eqX), y1: yScale(0), x2: xScale(eqX), y2: yScale(eqY), stroke: 'var(--ink-faint)', 'stroke-width': 1, 'stroke-dasharray': '3,3' }));
     plot.appendChild(svgEl('line', { x1: xScale(0), y1: yScale(eqY), x2: xScale(eqX), y2: yScale(eqY), stroke: 'var(--ink-faint)', 'stroke-width': 1, 'stroke-dasharray': '3,3' }));
-
+ 
     // Equilibrium point + label
     plot.appendChild(svgEl('circle', { cx: xScale(eqX), cy: yScale(eqY), r: 5, fill: 'var(--ink)' }));
     const eqLabel = svgEl('text', { x: xScale(eqX) + 10, y: yScale(eqY) - 10, 'font-family': 'var(--font-mono)', 'font-size': '10.5', fill: 'var(--ink)', 'font-weight': '600' });
     eqLabel.textContent = n === 2 ? `Nash eq. (${Fmt.qty(eqX)}, ${Fmt.qty(eqY)})` : `Symmetric eq. qᵢ = ${Fmt.qty(eqY)}`;
     plot.appendChild(eqLabel);
-
+ 
     const brLabel = svgEl('text', { x: xScale(totalMax * 0.15), y: yScale(Econ.cournotBestResponse(a, b, mc, totalMax * 0.15)) - 8, 'font-family': 'var(--font-body)', 'font-size': '11', fill: 'var(--blue)', 'font-weight': '600' });
     brLabel.textContent = "Firm i's best response";
     plot.appendChild(brLabel);
-
+ 
     legendWrap.innerHTML = '';
     const legendItems = [{ type: 'line', color: 'var(--blue)', label: "Firm i's best response" }];
     if (n === 2) legendItems.push({ type: 'line', color: 'var(--brown)', label: "Firm 2's best response" });
     legendItems.push({ type: 'line', color: 'var(--rule-strong)', label: '45° symmetric-output line' });
     legendWrap.appendChild(buildLegend(legendItems));
   }
-
+ 
   function renderBertrandChart({ a, b, mc, n, result }) {
     const xMax = 6; // "rounds" of undercutting, illustrative
     const yMax = a * 0.6;
@@ -1774,7 +1852,7 @@ function mountCournot(containerId, config = {}) {
     chartWrap.innerHTML = '';
     chartWrap.appendChild(chart.svg);
     const { plot, xScale, yScale } = chart;
-
+ 
     // Illustrative convergence path: price halves the gap to MC each round
     const startPrice = Math.min(a * 0.55, yMax * 0.95);
     const pathPts = [];
@@ -1785,13 +1863,13 @@ function mountCournot(containerId, config = {}) {
     }
     plot.appendChild(svgEl('path', { d: linePath(pathPts), stroke: 'var(--blue)', 'stroke-width': 2.25, fill: 'none' }));
     pathPts.forEach(pt => plot.appendChild(svgEl('circle', { cx: pt[0], cy: pt[1], r: 3.5, fill: 'var(--blue)' })));
-
+ 
     // MC floor line
     plot.appendChild(svgEl('line', { x1: xScale(0), y1: yScale(mc), x2: xScale(xMax), y2: yScale(mc), stroke: 'var(--brown)', 'stroke-width': 2, 'stroke-dasharray': '6,3' }));
     const mcLabel = svgEl('text', { x: xScale(xMax) - 30, y: yScale(mc) - 6, 'font-family': 'var(--font-body)', 'font-size': '11', fill: 'var(--brown)', 'font-weight': '600' });
     mcLabel.textContent = 'P = MC (equilibrium floor)';
     plot.appendChild(mcLabel);
-
+ 
     legendWrap.innerHTML = '';
     legendWrap.appendChild(buildLegend([
       { type: 'line', color: 'var(--blue)', label: 'Price undercutting path' },
@@ -1802,7 +1880,7 @@ function mountCournot(containerId, config = {}) {
     note.textContent = `With ${n} firms selling a homogeneous good at identical constant marginal cost, any price above MC invites undercutting by a rival — the unique equilibrium is P = MC regardless of n ≥ 2, so profits are driven to zero (the "Bertrand paradox").`;
     legendWrap.appendChild(note);
   }
-
+ 
   firmsInput.addEventListener('input', (e) => {
     state.firms = Number(e.target.value);
     el('[data-role="v-firms"]').textContent = state.firms;
@@ -1820,19 +1898,19 @@ function mountCournot(containerId, config = {}) {
       computeAndRender();
     });
   });
-
+ 
   computeAndRender();
 }
-
-
+ 
+ 
 /* ============================================================================
    SIMULATOR 4 — PRICE DISCRIMINATION
    ============================================================================ */
-
+ 
 function mountPriceDiscrimination(containerId, config = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
+ 
   const state = {
     degree: config.degree ?? 3,
     seg1Intercept: config.seg1Intercept ?? 100,
@@ -1841,7 +1919,7 @@ function mountPriceDiscrimination(containerId, config = {}) {
     seg2Slope: config.seg2Slope ?? 0.5,
     mc: config.mc ?? 20,
   };
-
+ 
   const root = document.createElement('div');
   root.className = 'sim-root';
   root.innerHTML = `
@@ -1870,7 +1948,7 @@ function mountPriceDiscrimination(containerId, config = {}) {
     <div data-role="body"></div>
   `;
   container.appendChild(root);
-
+ 
   const el = (sel) => root.querySelector(sel);
   const mcInput = el(`#${containerId}-mc`);
   const seg1SlopeInput = el(`#${containerId}-seg1slope`);
@@ -1878,15 +1956,15 @@ function mountPriceDiscrimination(containerId, config = {}) {
   const segControlsEls = root.querySelectorAll('[data-role="seg-controls"]');
   const degreeBtns = root.querySelectorAll('.sim-toggle-btn');
   const bodyWrap = el('[data-role="body"]');
-
+ 
   function computeAndRender() {
     segControlsEls.forEach(e => e.style.display = state.degree === 3 ? '' : 'none');
-
+ 
     if (state.degree === 1) renderFirstDegree();
     else if (state.degree === 2) renderSecondDegree();
     else renderThirdDegree();
   }
-
+ 
   function renderFirstDegree() {
     const a = state.seg1Intercept, b = state.seg1Slope, mc = state.mc;
     const comp = { q: Math.max(0, (a - mc) / b), p: mc };
@@ -1895,7 +1973,7 @@ function mountPriceDiscrimination(containerId, config = {}) {
     // but all surplus becomes producer surplus; CS -> 0, DWL -> 0.
     const totalSurplus = Econ.consumerSurplus(a, mc, comp.q) + Econ.producerSurplus(mc, mc, comp.q) + comp.q * (mc - mc);
     const producerCaptures = 0.5 * comp.q * (a - mc);
-
+ 
     bodyWrap.innerHTML = `
       <div class="sim-layout">
         <div class="sim-svg-wrap" data-role="chart"></div>
@@ -1919,7 +1997,7 @@ function mountPriceDiscrimination(containerId, config = {}) {
     plot.appendChild(svgEl('line', { x1: xScale(0), y1: yScale(mc), x2: xScale(xMax), y2: yScale(mc), stroke: 'var(--brown)', 'stroke-width': 2, 'stroke-dasharray': '6,3' }));
     plot.appendChild(svgEl('polygon', { points: polygonPoints([[xScale(0), yScale(a)], [xScale(comp.q), yScale(mc)], [xScale(0), yScale(mc)]]), fill: 'var(--brown)', opacity: 0.28 }));
   }
-
+ 
   function renderSecondDegree() {
     // Illustrative 3-block declining-block pricing on a single demand curve,
     // approximating perfect discrimination via a step tariff.
@@ -1936,7 +2014,7 @@ function mountPriceDiscrimination(containerId, config = {}) {
     const profit = revenue - mc * comp.q;
     const singlePrice = Econ.monopolyOutcome(a, b, mc);
     const singleProfit = (singlePrice.p - mc) * singlePrice.q;
-
+ 
     bodyWrap.innerHTML = `
       <div class="sim-layout">
         <div class="sim-svg-wrap" data-role="chart"></div>
@@ -1966,17 +2044,17 @@ function mountPriceDiscrimination(containerId, config = {}) {
       }));
     }
   }
-
+ 
   function renderThirdDegree() {
     const mc = state.mc;
     const a1 = state.seg1Intercept, b1 = state.seg1Slope;
     const a2 = state.seg2Intercept, b2 = state.seg2Slope;
-
+ 
     const seg1 = Econ.monopolyOutcome(a1, b1, mc);
     const seg2 = Econ.monopolyOutcome(a2, b2, mc);
     const profitDiscriminating = (seg1.p - mc) * seg1.q + (seg2.p - mc) * seg2.q;
     const csDiscriminating = Econ.consumerSurplus(a1, seg1.p, seg1.q) + Econ.consumerSurplus(a2, seg2.p, seg2.q);
-
+ 
     // Single-price benchmark: firm sets one price across both segments.
     // Combined demand at price p: Q(p) = max(0,(a1-p)/b1) + max(0,(a2-p)/b2).
     // Find profit-maximizing single price via fine search over a sensible range.
@@ -1992,7 +2070,7 @@ function mountPriceDiscrimination(containerId, config = {}) {
     const q1Single = Math.max(0, (a1 - bestP) / b1);
     const q2Single = Math.max(0, (a2 - bestP) / b2);
     const csSingle = Econ.consumerSurplus(a1, bestP, q1Single) + Econ.consumerSurplus(a2, bestP, q2Single);
-
+ 
     bodyWrap.innerHTML = `
       <div class="sim-readouts" style="grid-template-columns:repeat(2,1fr);margin-bottom:1rem;">
         <div class="readout-card"><div class="readout-label">Segment 1 price / qty</div><div class="readout-value accent-blue">${Fmt.price(seg1.p)} / ${Fmt.qty(seg1.q)}</div></div>
@@ -2020,18 +2098,18 @@ function mountPriceDiscrimination(containerId, config = {}) {
       </div>
       <p style="font-size:0.82rem;color:var(--ink-soft);margin-top:0.9rem;">Third-degree discrimination sets a separate profit-maximizing price in each segment based on its own elasticity — the <strong>less elastic segment (steeper demand) is charged the higher price</strong>. Whether total welfare rises or falls relative to single pricing depends on whether discrimination expands output overall (it can go either way, unlike first-degree discrimination which is unambiguously efficient).</p>
     `;
-
+ 
     const yMaxShared = Math.max(a1, a2) * 1.05;
-
+ 
     const chart1 = buildChart({ width: 300, height: 260, xMax: Math.max(seg1.q, seg2.q) * 1.3 + 3, yMax: yMaxShared, xLabel: 'Q', yLabel: 'P', margin: { top: 14, right: 16, bottom: 34, left: 46 } });
     bodyWrap.querySelector('[data-role="chart-discrim"]').appendChild(chart1.svg);
     drawSegmentPair(chart1, a1, b1, a2, b2, mc, seg1, seg2);
-
+ 
     const chart2 = buildChart({ width: 300, height: 260, xMax: Math.max(seg1.q, seg2.q) * 1.3 + 3, yMax: yMaxShared, xLabel: 'Q', yLabel: 'P', margin: { top: 14, right: 16, bottom: 34, left: 46 } });
     bodyWrap.querySelector('[data-role="chart-single"]').appendChild(chart2.svg);
     drawSegmentPair(chart2, a1, b1, a2, b2, mc, { p: bestP, q: q1Single }, { p: bestP, q: q2Single });
   }
-
+ 
   function drawSegmentPair(chart, a1, b1, a2, b2, mc, out1, out2) {
     const { plot, xScale, yScale, plotW, margin } = chart;
     const xMax1 = a1 / b1, xMax2 = a2 / b2;
@@ -2041,7 +2119,7 @@ function mountPriceDiscrimination(containerId, config = {}) {
     plot.appendChild(svgEl('circle', { cx: xScale(out1.q), cy: yScale(out1.p), r: 3.5, fill: 'var(--blue)' }));
     plot.appendChild(svgEl('circle', { cx: xScale(out2.q), cy: yScale(out2.p), r: 3.5, fill: 'var(--brown)' }));
   }
-
+ 
   mcInput.addEventListener('input', (e) => {
     state.mc = Number(e.target.value);
     el('[data-role="v-mc"]').textContent = Fmt.price(state.mc);
@@ -2064,15 +2142,15 @@ function mountPriceDiscrimination(containerId, config = {}) {
       computeAndRender();
     });
   });
-
+ 
   computeAndRender();
 }
-
-
+ 
+ 
 /* ============================================================================
    SIMULATOR 5 — GAME THEORY PAYOFF MATRIX
    ============================================================================ */
-
+ 
 const GT_PRESETS = {
   prisoners: {
     rowLabels: ['Cooperate', 'Defect'],
@@ -2107,20 +2185,20 @@ const GT_PRESETS = {
     ],
   },
 };
-
+ 
 function mountGameTheory(containerId, config = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
+ 
   const presetKey = config.preset && GT_PRESETS[config.preset] ? config.preset : 'prisoners';
   const presetData = GT_PRESETS[presetKey];
-
+ 
   const state = {
     rowLabels: config.rowLabels ? [...config.rowLabels] : [...presetData.rowLabels],
     colLabels: config.colLabels ? [...config.colLabels] : [...presetData.colLabels],
     payoffs: config.payoffs ? config.payoffs.map(row => row.map(cell => [...cell])) : presetData.payoffs.map(row => row.map(cell => [...cell])),
   };
-
+ 
   const root = document.createElement('div');
   root.className = 'sim-root';
   root.innerHTML = `
@@ -2142,17 +2220,17 @@ function mountGameTheory(containerId, config = {}) {
     <div data-role="legend"></div>
   `;
   container.appendChild(root);
-
+ 
   const el = (sel) => root.querySelector(sel);
   const presetSelect = el('[data-role="preset-select"]');
   presetSelect.value = presetKey;
   const tableEl = el('[data-role="gt-table"]');
   const legendWrap = el('[data-role="legend"]');
-
+ 
   function computeBestResponsesAndNash() {
     const rowBR = [[false, false], [false, false]]; // rowBR[r][c] = true if row r is P1's best response given column c
     const colBR = [[false, false], [false, false]]; // colBR[r][c] = true if col c is P2's best response given row r
-
+ 
     // For each column, find row(s) maximizing P1's payoff
     for (let c = 0; c < 2; c++) {
       const p1c0 = state.payoffs[0][c][0], p1c1 = state.payoffs[1][c][0];
@@ -2165,7 +2243,7 @@ function mountGameTheory(containerId, config = {}) {
       if (p2r0 >= p2r1) colBR[r][0] = true;
       if (p2r1 >= p2r0) colBR[r][1] = true;
     }
-
+ 
     const nash = [[false, false], [false, false]];
     for (let r = 0; r < 2; r++) {
       for (let c = 0; c < 2; c++) {
@@ -2174,10 +2252,10 @@ function mountGameTheory(containerId, config = {}) {
     }
     return { rowBR, colBR, nash };
   }
-
+ 
   function render() {
     const { rowBR, colBR, nash } = computeBestResponsesAndNash();
-
+ 
     tableEl.innerHTML = `
       <tr>
         <th class="gt-corner"></th>
@@ -2202,7 +2280,7 @@ function mountGameTheory(containerId, config = {}) {
         ${gtCellHTML(1, 1, rowBR, colBR, nash)}
       </tr>
     `;
-
+ 
     legendWrap.innerHTML = '';
     legendWrap.appendChild(buildLegend([
       { type: 'swatch', color: 'var(--sage-wash)', label: 'Nash equilibrium cell' },
@@ -2214,10 +2292,10 @@ function mountGameTheory(containerId, config = {}) {
       ? 'No pure-strategy Nash equilibrium exists in this game — best responses cycle (a mixed-strategy equilibrium exists instead).'
       : `Player 1's payoff (blue, left of each cell) is underlined where that row is a best response to the column; Player 2's payoff (brown, right) is underlined where that column is a best response to the row. Cells with both underlined are pure-strategy Nash equilibria.`;
     legendWrap.appendChild(note);
-
+ 
     attachCellListeners();
   }
-
+ 
   function gtCellHTML(r, c, rowBR, colBR, nash) {
     const [p1, p2] = state.payoffs[r][c];
     const isNash = nash[r][c];
@@ -2231,7 +2309,7 @@ function mountGameTheory(containerId, config = {}) {
       </td>
     `;
   }
-
+ 
   function attachCellListeners() {
     root.querySelectorAll('[data-role="payoff"]').forEach(input => {
       input.addEventListener('input', (e) => {
@@ -2257,7 +2335,7 @@ function mountGameTheory(containerId, config = {}) {
       });
     });
   }
-
+ 
   presetSelect.addEventListener('change', (e) => {
     const key = e.target.value;
     if (key === 'custom') return;
@@ -2267,7 +2345,7 @@ function mountGameTheory(containerId, config = {}) {
     state.payoffs = preset.payoffs.map(row => row.map(cell => [...cell]));
     render();
   });
-
+ 
   render();
 }
 </script>
