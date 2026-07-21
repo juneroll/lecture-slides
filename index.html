@@ -1812,112 +1812,58 @@ const PROBLEM_SETS = [
   {
     id: 'ps1',
     number: 1,
-    title: 'The Competitive Benchmark',
+    title: 'Problem Set #1',
     assignedDate: '2026-07-20',
     dueDate: '2026-07-27',
-    summary: 'Supply and demand mechanics, surplus accounting, and the welfare cost of taxes and price controls.',
-    topics: ['Supply & demand', 'Surplus & efficiency', 'Tax incidence', 'Price controls'],
+    summary: 'What was the neoclassical approach to the problem of coordination in a private-ownership economy?',
+    topics: ['Circular Flow Diagram', 'Neoclassical Economic Theory', 'Price System', 'Methodology'],
     bodyHTML: `
-      <p>This set works the competitive benchmark from Lecture 1 by hand, then
-      asks you to check the results against the live simulator. Show your
-      algebra — a correct final number without supporting steps earns partial
-      credit only.</p>
+      <p>This is a short problem set meant to get you thinking a little more about the first lecture.</p>
     `,
     problems: [
       {
         id: 'p1',
-        points: 10,
+        points: 8,
         prompt: `
-          <p>A market has demand <code>P = 120 − 2Q</code> and supply
-          <code>P = 20 + 3Q</code>.</p>
-          <p>(a) Solve for the equilibrium price and quantity.<br>
-          (b) Compute consumer surplus and producer surplus at that
-          equilibrium.</p>
+          <p>The lecture contrasts two situations: an island with one person and a decentralized and interdependent
+          private-ownership economy. In 4-6 sentences or less, explain what seems to be uniquely different about the second
+          situation compared to the first one.</p>
         `,
         solution: `
-          <p>Setting demand equal to supply: <code>120 − 2Q = 20 + 3Q</code>,
-          so <code>100 = 5Q</code> and <code>Q* = 20</code>. Substituting
-          back, <code>P* = 120 − 2(20) = 80</code> (check against supply:
-          <code>20 + 3(20) = 80</code> ✓).</p>
-          <p><strong>CS</strong> = ½ · 20 · (120 − 80) = <strong>$400</strong>.
-          <strong>PS</strong> = ½ · 20 · (80 − 20) = <strong>$600</strong>.
-          Total surplus is $1,000 — the largest this market can produce, and
-          the benchmark every later distortion in the course gets measured
-          against.</p>
         `
       },
       {
         id: 'p2',
-        points: 10,
+        points: 8,
         prompt: `
-          <p>Continuing from Problem 1, the government imposes a
-          <strong>$10 per-unit tax</strong> collected from sellers.</p>
-          <p>(a) Find the new quantity traded, the price buyers pay, and the
-          price sellers receive.<br>
-          (b) How much of the $10 falls on buyers, and how much on sellers?
-          Why isn't it split evenly?<br>
-          (c) Compute the deadweight loss.</p>
-          <div data-sim="supply-demand"
-               data-config='{"demandIntercept": 120, "demandSlope": 2, "supplyIntercept": 20, "supplySlope": 3}'
-               data-caption="Set the per-unit tax slider to $10 and compare the readouts to your answers above"></div>
+          <p>Think through the circular flow diagram. Attempt to recreate it without looking!
+          Afterwards, compare your diagram and fix. Try to explain briefly how firms and households 
+          interact and how this relates to the coordination problem we have talked about.</p>
         `,
         solution: `
-          <p>With wedge <code>Pd − Ps = 10</code>, solving
-          <code>(120 − Pd)/2 = (Pd − 10 − 20)/3</code> gives
-          <code>Pd = $84</code>, <code>Ps = $74</code>, and <code>Q = 18</code>.</p>
-          <p>Buyers pay $4 more than the old $80 equilibrium price; sellers
-          receive $6 less. <strong>Sellers bear the larger share (60%).</strong>
-          Supply is steeper than demand here (slope 3 vs. 2), and the less
-          elastic side of a market always absorbs more of a tax — in this
-          market, that's supply.</p>
-          <p><strong>DWL</strong> = ½ · (20 − 18) · $10 = <strong>$10</strong>.
-          Tax revenue = $10 · 18 = <strong>$180</strong>.</p>
         `
       },
       {
         id: 'p3',
-        points: 8,
+        points: 6,
         prompt: `
-          <p>Instead of a tax, regulators impose a <strong>price ceiling at
-          $50</strong> on the original market from Problem 1.</p>
-          <p>(a) Find quantity demanded and quantity supplied at $50, and say
-          which one actually trades.<br>
-          (b) Compute the size of the shortage and the resulting deadweight
-          loss.</p>
+          <p>Is industrial organization more than applied price and resource-allocation theory?
+          What is one thing this definition might explain well and one thing you suspect it leaves out.
+          No wrong answers! This is a warm-up to think more about methodology.
         `,
         solution: `
-          <p>At <code>P = 50</code>: <code>Qd = (120 − 50)/2 = 35</code>,
-          <code>Qs = (50 − 20)/3 = 10</code>. The <strong>short side of the
-          market rules</strong> — sellers can't be forced to sell more than
-          they choose to — so only <strong>10 units trade</strong>, leaving a
-          shortage of <strong>25 units</strong> (35 − 10).</p>
-          <p><strong>DWL</strong> = ½ · (20 − 10) · (100 − 50) =
-          <strong>$250</strong>, using demand's willingness-to-pay for the
-          10th unit ($100) against its true marginal cost ($50).</p>
         `
       },
       {
         id: 'p4',
-        points: 6,
+        points: 8,
         prompt: `
-          <p>Stigler called industrial organization "nothing more than"
-          applied price theory; most contemporary textbooks call it the study
-          of imperfect competition. In 3–5 sentences, explain why this course
-          still spends an entire lecture building the perfectly competitive
-          model in detail, given that almost no real market fully satisfies
-          its assumptions.</p>
+          <p>Why do you think the first lecture was spent on building some of the historical context
+          for perfect competition? What is the "would" versus the "what is" saying about how the neoclassical
+          economists approached this problem? Give one real-world example you think perfect competition might 
+          set aside.</p>
         `,
         solution: `
-          <p><em>Model answer:</em> Perfect competition isn't offered as a
-          description of real markets — it's the reference point that makes
-          every later model legible. Once we know precisely what output,
-          price, and surplus split the competitive benchmark delivers, every
-          subsequent model in the course (monopoly, price discrimination,
-          oligopoly) can be characterized as a specific, measurable departure
-          from that benchmark, with its own wedge and its own
-          deadweight-loss triangle. Without the benchmark, "market power
-          raises price" is just an assertion; with it, it's a comparison with
-          a number attached.</p>
         `
       },
     ]
