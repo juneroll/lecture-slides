@@ -125,6 +125,66 @@ Config keys by simulator (all optional):
                          'stagHunt', rowLabels, colLabels, payoffs
 
 --------------------------------------------------------------------------------
+HOW TO ADD AN IMAGE (one post only — it lives in that post's own bodyHTML,
+prompt, or solution, so it never appears anywhere else)
+--------------------------------------------------------------------------------
+Plain, no caption — drop this directly in bodyHTML/prompt/solution:
+
+  <img src="images/lec1-scp-diagram.png" alt="Describe the image">
+
+`src` is relative to wherever this index.html itself is hosted. If it's
+deployed from a GitHub Pages repo, put the file in an /images folder in
+that same repo. A full https:// URL to an image hosted anywhere else
+works too. Images are sized and bordered automatically to fit the column.
+
+With a hand-numbered caption, styled like a simulator figure:
+
+  <figure class="lecture-figure">
+    <img src="images/lec1-scp-diagram.png" alt="Describe the image">
+    <figcaption>Figure 1 — the structure-conduct-performance paradigm</figcaption>
+  </figure>
+
+Use `pset-figure` instead of `lecture-figure` inside a problem set. Unlike
+simulator figures, these captions are typed by hand, not auto-numbered.
+
+To keep everything in this one file with no separate image files at all,
+inline it as a data URI instead:
+
+  <img src="data:image/png;base64,iVBORw0KG...">
+
+(most "image to base64" tools, or `base64 -i yourfile.png` on the command
+line, produce that string). Fully portable, but bloats the .html file by
+roughly 4/3 the image's own size — fine for one or two diagrams, worth
+avoiding for a lecture full of photos.
+
+--------------------------------------------------------------------------------
+HOW TO ADD A FOOTNOTE
+--------------------------------------------------------------------------------
+Add a `footnotes` array to a lecture or problem set (same level as
+`bodyHTML`), then reference an entry by its 1-indexed position with a
+marker anywhere in that post's bodyHTML/prompt/solution:
+
+  footnotes: [
+    'Ronald H. Coase, "The Nature of the Firm," <em>Economica</em> 4, no. 16 (1937): 386–405.',
+    'A second citation, referenced later in the same post.',
+  ],
+  bodyHTML: `
+    <p>A claim worth citing.<sup class="fnref" data-fn="1"></sup> More text,
+    with a second claim.<sup class="fnref" data-fn="2"></sup></p>
+  `
+
+Number markers in the order they're first encountered while reading, top
+to bottom — that's the one rule that matters, since the visible "[N]" and
+the endnote list are both generated from `data-fn`, not from array order.
+Reusing the same `data-fn` twice cites the same entry twice without
+duplicating it in the list. Clicking a marker opens its text in a small
+popover right where you clicked — no jump to the bottom of a long or
+still-collapsed post — and every footnote used anywhere in the post also
+collects into one numbered list appended after its content, for anyone
+who'd rather read all the citations at once. Footnote text may contain
+simple inline HTML like <em> or <a>.
+
+--------------------------------------------------------------------------------
 STORAGE (accordion open/closed state, active tab)
 --------------------------------------------------------------------------------
 One flag at the top of the <script> block:
@@ -140,11 +200,33 @@ interface either way, under three keys: `accordionState` (lectures),
 `psetAccordionState` (problem sets), and `activeTab`.
 
 --------------------------------------------------------------------------------
+MAXIMIZING A POST (fullscreen one lecture or problem set)
+--------------------------------------------------------------------------------
+Every post has a small corner button (expand-arrows icon) that blows that
+one post up to fill the whole browser viewport — built for projecting a
+single lecture during class without the rest of the feed, HUD, or tabs
+competing for attention. Maximizing auto-expands the post if it was
+collapsed, nudges the reading type size up slightly, and locks background
+scrolling. Click the same button again (now a compress icon), press
+Escape, or follow any link/hash to restore it.
+
+--------------------------------------------------------------------------------
+COPYING A LINK TO ONE POST
+--------------------------------------------------------------------------------
+The other corner button (an open-box-with-arrow icon) copies a shareable
+link to that specific lecture or problem set — the same #post-lec3 /
+#pset-ps2 pattern described below, generated and copied for you rather
+than typed by hand. It always updates the address bar to the correct
+link even if clipboard access is blocked for some reason, and the icon
+briefly turns into a checkmark to confirm.
+
+--------------------------------------------------------------------------------
 ALSO WORTH KNOWING
 --------------------------------------------------------------------------------
-• Deep links: share  page.html#post-lec3  for a lecture or
-  page.html#pset-ps2  for a problem set — either switches to the right
-  tab, expands that post, and scrolls it into view on load.
+• Deep links: page.html#post-lec3 for a lecture or page.html#pset-ps2
+  for a problem set — either switches to the right tab, expands that
+  post, and scrolls it into view on load. The link-icon button on each
+  post copies this for you (see above).
 • "Expand all" in the HUD also makes browser find (Ctrl/Cmd-F) work
   across every post in the active tab, since collapsed content is
   unsearchable; it only acts on whichever tab (lectures or problem sets)
@@ -457,6 +539,7 @@ a { color: var(--maroon); }
 }
 
 .lecture-post {
+  position: relative;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: var(--paper-raised);
@@ -472,7 +555,7 @@ a { color: var(--maroon); }
   align-items: center;
   gap: 1.1rem;
   width: 100%;
-  padding: 1.15rem 1.35rem;
+  padding: 1.15rem 5.2rem 1.15rem 1.35rem; /* extra right padding clears the corner action buttons */
   background: none;
   border: none;
   cursor: pointer;
@@ -603,6 +686,7 @@ a { color: var(--maroon); }
    --------------------------------------------------------------------------- */
 
 .pset-post {
+  position: relative;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: var(--paper-raised);
@@ -618,7 +702,7 @@ a { color: var(--maroon); }
   align-items: center;
   gap: 1.1rem;
   width: 100%;
-  padding: 1.15rem 1.35rem;
+  padding: 1.15rem 5.2rem 1.15rem 1.35rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -754,6 +838,29 @@ a { color: var(--maroon); }
   border-radius: 2px;
 }
 
+/* Images dropped directly into a lecture's or problem set's own bodyHTML —
+   scoped to that one post only, since bodyHTML is per-post. Plain <img>
+   gets sane sizing for free; wrap in <figure class="lecture-figure"> (or
+   pset-figure) for a captioned version matching the simulator figures. */
+.lecture-content img,
+.pset-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.3rem auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+.lecture-figure, .pset-figure { margin: 1.6rem 0 1.9rem; }
+.lecture-figure img, .pset-figure img { margin: 0 0 0.6rem; }
+.lecture-figure figcaption, .pset-figure figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
 /* Individual problems, each with its own solution reveal */
 .problem {
   border: 1px solid var(--rule);
@@ -842,6 +949,134 @@ a { color: var(--maroon); }
   background: var(--paper-raised);
   padding: 0.1em 0.35em;
   border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Footnotes — inline citation markers with a click-to-open popover, plus
+   a numbered reference list appended at the end of whichever post used them
+   --------------------------------------------------------------------------- */
+
+.fnref {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.68em;
+  font-weight: 600;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--maroon);
+  background: none;
+  border: none;
+  padding: 0 0.12em;
+  margin: 0 0.02em;
+  cursor: pointer;
+}
+.fnref:hover, .fnref[aria-expanded="true"] { text-decoration: underline; }
+
+.footnote-popover {
+  position: fixed;
+  z-index: 200;
+  max-width: 340px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hud);
+  padding: 0.8rem 0.95rem;
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink);
+  display: none;
+}
+.footnote-popover.is-open { display: block; }
+.footnote-popover .fn-num {
+  font-family: var(--font-mono);
+  color: var(--maroon);
+  font-weight: 600;
+  margin-right: 0.3em;
+}
+.footnote-popover em { font-style: italic; }
+
+.footnotes-list {
+  margin: 2.2rem 0 0;
+  padding-top: 1.1rem;
+  padding-left: 1.4rem;
+  border-top: 1px dashed var(--rule-strong);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+.footnotes-list li::marker {
+  font-family: var(--font-mono);
+  color: var(--ink-faint);
+}
+
+/* ---------------------------------------------------------------------------
+   Post actions — corner buttons shared by every lecture/problem-set post:
+   copy a shareable link, and maximize to fill the viewport. Sit as a
+   sibling of the header button (not nested inside it — a button can't
+   contain another button), overlaid in the padding gutter the header
+   reserves for them.
+   --------------------------------------------------------------------------- */
+
+.post-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1.15rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.4rem;
+}
+.post-action-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.post-action-btn:hover { color: var(--maroon); border-color: var(--rule-strong); }
+.post-action-btn svg { width: 13px; height: 13px; }
+
+body.scroll-locked { overflow: hidden; }
+
+.lecture-post.is-maximized,
+.pset-post.is-maximized {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow-y: auto;
+}
+
+.lecture-post.is-maximized .lecture-header,
+.pset-post.is-maximized .pset-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--rule);
+}
+
+.lecture-post.is-maximized .post-actions,
+.pset-post.is-maximized .post-actions {
+  position: fixed;
+  top: 1.1rem;
+  right: 1.35rem;
+}
+
+.lecture-post.is-maximized .lecture-content,
+.pset-post.is-maximized .pset-content {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  font-size: 1.12rem; /* a touch larger — this is presentation mode */
+  line-height: 1.75;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1462,6 +1697,11 @@ const LECTURES = [
     title: 'Introduction to Industrial Organization',
     date: '2026-07-20',
     summary: 'What is industrial organization?',
+    footnotes: [
+      'The 1871–74 marginal revolution is conventionally credited to three economists working independently: William Stanley Jevons (<em>The Theory of Political Economy</em>, 1871), Carl Menger (<em>Principles of Economics</em>, 1871), and Léon Walras (<em>Elements of Pure Economics</em>, 1874).',
+      'On this process/state distinction, see Friedrich A. Hayek, "The Meaning of Competition," in <em>Individualism and Economic Order</em> (Chicago: University of Chicago Press, 1948), 92–106 (originally a lecture at Princeton, May 1946), and Paul J. McNulty, "A Note on the History of Perfect Competition," <em>Journal of Political Economy</em> 75, no. 4, pt. 1 (1967): 395–399.',
+      'George J. Stigler, "Perfect Competition, Historically Contemplated," <em>Journal of Political Economy</em> 65, no. 1 (1957): 1–17.',
+    ],
     bodyHTML: `
       <p>A definition of industrial organization is a bit touchy for me.</p>
       
@@ -1477,7 +1717,7 @@ const LECTURES = [
       
       <p>It is an intellectual masterpiece and what made economics more thoroughly a science, 
       together with its twin achievement, marginal utility theory which was introduced following 
-      the marginalist-subjectivist revolution from the neoclassicalists.</p>
+      the marginalist-subjectivist revolution from the neoclassicalists.<sup class="fnref" data-fn="1"></sup></p>
       
       <p>What makes this problem so worthy to answer? Assume two different situations:</p>
       
@@ -1515,12 +1755,12 @@ const LECTURES = [
 
       <p>The neoclassicalists, attempting to understand a resource-allocation problem where there are decentralized, 
       interdependent, and sometimes contradictory interests, asked a different question, not about what the system is 
-      doing but what the system would do.</p>
+      doing but what the system would do.<sup class="fnref" data-fn="2"></sup></p>
 
       <p>And hence, perfect competition came into being after a messy and long development.</p>
 
       <p>George Stigler, an important mid-twentieth-century economist in establishing the field of industrial organization, 
-      was forthright in saying that the field did not even exist! It was nothing more than applied price and resource-allocation 
+      was forthright in saying that the field did not even exist!<sup class="fnref" data-fn="3"></sup> It was nothing more than applied price and resource-allocation 
       theory to him.</p>
 
       <p>What does that mean?</p>
@@ -1753,7 +1993,10 @@ function setExpanded(lecture, expanded, { persist = true } = {}) {
   const headerBtn = document.getElementById('header-' + lecture.id);
   article.classList.toggle('expanded', expanded);
   headerBtn.setAttribute('aria-expanded', String(expanded));
-  if (expanded) mountSimsIn(article, lecture);
+  if (expanded) {
+    mountSimsIn(article, lecture);
+    wireFootnotes(article, lecture.footnotes);
+  }
   if (persist) {
     const stored = storage.get('accordionState') || {};
     stored[lecture.id] = expanded;
@@ -1787,6 +2030,10 @@ function renderFeed() {
         '</span>' +
         CHEVRON_SVG +
       '</button>' +
+      '<span class="post-actions">' +
+        '<button type="button" class="post-action-btn share-btn" aria-label="Copy link to this lecture">' + LINK_ICON_SVG + '</button>' +
+        '<button type="button" class="post-action-btn maximize-btn" aria-label="Maximize this lecture" aria-pressed="false">' + MAXIMIZE_ICON_SVG + '</button>' +
+      '</span>' +
       '<div class="lecture-body" id="body-' + lecture.id + '" role="region" aria-labelledby="header-' + lecture.id + '">' +
         '<div class="lecture-body-inner">' +
           '<div class="lecture-content">' + lecture.bodyHTML + '</div>' +
@@ -1796,8 +2043,11 @@ function renderFeed() {
     feedEl.appendChild(article);
 
     article.querySelector('.lecture-header').addEventListener('click', () => {
+      if (article.classList.contains('is-maximized')) return; // stays open while maximized
       setExpanded(lecture, !article.classList.contains('expanded'));
     });
+    wireMaximizeButton(article, article.querySelector('.maximize-btn'), () => setExpanded(lecture, true));
+    wireShareButton(article.querySelector('.share-btn'), 'post', lecture.id);
 
     if (isExpanded) setExpanded(lecture, true, { persist: false });
   });
@@ -1872,6 +2122,7 @@ function setPsetExpanded(pset, expanded, { persist = true } = {}) {
   if (expanded) {
     mountSimsIn(article, pset, 'PS');
     wireProblemToggles(article);
+    wireFootnotes(article, pset.footnotes);
   }
   if (persist) {
     const stored = storage.get('psetAccordionState') || {};
@@ -1932,6 +2183,10 @@ function renderPsetFeed() {
         '</span>' +
         PSET_CHEVRON_SVG +
       '</button>' +
+      '<span class="post-actions">' +
+        '<button type="button" class="post-action-btn share-btn" aria-label="Copy link to this problem set">' + LINK_ICON_SVG + '</button>' +
+        '<button type="button" class="post-action-btn maximize-btn" aria-label="Maximize this problem set" aria-pressed="false">' + MAXIMIZE_ICON_SVG + '</button>' +
+      '</span>' +
       '<div class="pset-body" id="pset-body-' + pset.id + '" role="region" aria-labelledby="pset-header-' + pset.id + '">' +
         '<div class="pset-body-inner">' +
           '<div class="pset-content">' + pset.bodyHTML + problemsHTML + '</div>' +
@@ -1941,8 +2196,11 @@ function renderPsetFeed() {
     feedEl.appendChild(article);
 
     article.querySelector('.pset-header').addEventListener('click', () => {
+      if (article.classList.contains('is-maximized')) return; // stays open while maximized
       setPsetExpanded(pset, !article.classList.contains('expanded'));
     });
+    wireMaximizeButton(article, article.querySelector('.maximize-btn'), () => setPsetExpanded(pset, true));
+    wireShareButton(article.querySelector('.share-btn'), 'pset', pset.id);
 
     if (isExpanded) setPsetExpanded(pset, true, { persist: false });
   });
@@ -1963,6 +2221,209 @@ function openPsetFromHash() {
   });
   return true;
 }
+
+
+/* ============================================================================
+   POST MAXIMIZE — fullscreen a single lecture or problem set, like
+   maximizing a window. One shared implementation for both post types,
+   since the behavior itself (not the content shape) is identical; each
+   render function just passes in its own "make sure this post is
+   expanded" callback.
+   ============================================================================ */
+
+const MAXIMIZE_ICON_SVG =
+  '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+    '<path d="M4 8V4h4M16 8V4h-4M4 12v4h4M16 12v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '</svg>';
+
+const RESTORE_ICON_SVG =
+  '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+    '<path d="M8 4v4H4M12 4v4h4M8 16v-4H4M12 16v-4h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '</svg>';
+
+function setMaximized(article, btn, ensureExpanded, maximized) {
+  article.classList.toggle('is-maximized', maximized);
+  btn.setAttribute('aria-pressed', String(maximized));
+  btn.setAttribute('aria-label', maximized ? 'Restore this post' : 'Maximize this post');
+  btn.innerHTML = maximized ? RESTORE_ICON_SVG : MAXIMIZE_ICON_SVG;
+  document.body.classList.toggle('scroll-locked', maximized);
+  if (maximized) {
+    ensureExpanded();
+    requestAnimationFrame(() => btn.focus());
+  }
+}
+
+// Finds whichever post (if any) is currently maximized and restores it.
+// Used as a safety net before maximizing a different post (not normally
+// reachable, since a maximized post visually covers every other control)
+// and by the Escape key / hash router, so navigating away never leaves a
+// fullscreen post stranded over the page.
+function restoreAnyMaximized() {
+  const el = document.querySelector('.lecture-post.is-maximized, .pset-post.is-maximized');
+  if (!el) return;
+  const btn = el.querySelector('.maximize-btn');
+  if (btn) { setMaximized(el, btn, () => {}, false); return; }
+  el.classList.remove('is-maximized');
+  document.body.classList.remove('scroll-locked');
+}
+
+function wireMaximizeButton(article, btn, ensureExpanded) {
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = '1';
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const goingIn = !article.classList.contains('is-maximized');
+    if (goingIn) restoreAnyMaximized();
+    setMaximized(article, btn, ensureExpanded, goingIn);
+  });
+}
+
+
+/* ============================================================================
+   SHARE LINK — a corner button that copies a deep link to one lecture or
+   problem set. Always updates the address bar (so the link is correct
+   even if clipboard access is unavailable) and best-effort copies it too.
+   ============================================================================ */
+
+const LINK_ICON_SVG =
+  '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+    '<path d="M8 3H3v14h14v-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M9 11L17 3M11 3h6v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '</svg>';
+
+const CHECK_ICON_SVG =
+  '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+    '<path d="M4 10.5L8 14.5L16 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '</svg>';
+
+function wireShareButton(btn, kind, id) {
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = '1';
+  const hashPrefix = kind === 'pset' ? '#pset-' : '#post-';
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const url = location.origin + location.pathname + hashPrefix + id;
+    location.hash = hashPrefix + id; // guaranteed correct even if clipboard access fails below
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).catch(() => {});
+    }
+    if (btn.dataset.confirming) return;
+    btn.dataset.confirming = '1';
+    const original = btn.innerHTML;
+    const originalLabel = btn.getAttribute('aria-label');
+    btn.innerHTML = CHECK_ICON_SVG;
+    btn.setAttribute('aria-label', 'Link copied');
+    setTimeout(() => {
+      btn.innerHTML = original;
+      btn.setAttribute('aria-label', originalLabel);
+      delete btn.dataset.confirming;
+    }, 1600);
+  });
+}
+
+
+/* ============================================================================
+   FOOTNOTES — inline citation markers, click to open a popover in place
+   (no jump to the bottom of a possibly-long or collapsed post), plus a
+   numbered reference list appended once at the end of the post's content.
+   Author syntax: <sup class="fnref" data-fn="1"></sup> in bodyHTML/prompt/
+   solution, matched against that post's own `footnotes` array (1-indexed).
+   ============================================================================ */
+
+let openFnBtn = null;
+
+const footnotePopoverEl = document.createElement('div');
+footnotePopoverEl.className = 'footnote-popover';
+footnotePopoverEl.setAttribute('role', 'tooltip');
+document.body.appendChild(footnotePopoverEl);
+
+function closeFootnotePopover() {
+  if (!openFnBtn) return;
+  footnotePopoverEl.classList.remove('is-open');
+  openFnBtn.setAttribute('aria-expanded', 'false');
+  openFnBtn = null;
+}
+
+function positionFootnotePopover(btn) {
+  const rect = btn.getBoundingClientRect();
+  const popRect = footnotePopoverEl.getBoundingClientRect();
+  const margin = 12;
+  let left = rect.left;
+  let top = rect.bottom + 6;
+  left = Math.min(left, window.innerWidth - popRect.width - margin);
+  left = Math.max(margin, left);
+  if (top + popRect.height > window.innerHeight - margin) {
+    top = rect.top - popRect.height - 6;
+  }
+  footnotePopoverEl.style.left = left + 'px';
+  footnotePopoverEl.style.top = Math.max(margin, top) + 'px';
+}
+
+function openFootnotePopover(btn, html) {
+  footnotePopoverEl.innerHTML = '<span class="fn-num">' + btn.textContent + '</span>' + html;
+  footnotePopoverEl.classList.add('is-open');
+  btn.setAttribute('aria-expanded', 'true');
+  openFnBtn = btn;
+  positionFootnotePopover(btn);
+}
+
+// Wires each footnote marker exactly once (lazy, on first expand — mirrors
+// mountSimsIn/wireProblemToggles), then appends one combined reference
+// list covering every marker used anywhere in the post.
+function wireFootnotes(article, footnotesArr) {
+  if (!footnotesArr || !footnotesArr.length) return;
+  const refs = article.querySelectorAll('.fnref[data-fn]');
+  const usedNums = new Set();
+
+  refs.forEach((btn) => {
+    const n = Number(btn.dataset.fn);
+    const text = footnotesArr[n - 1];
+    if (text === undefined) {
+      console.warn('Footnote index ' + n + ' has no matching entry in "' + article.id + '"');
+      btn.textContent = '[?]';
+      return;
+    }
+    usedNums.add(n);
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = '1';
+    btn.textContent = '[' + n + ']';
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (openFnBtn === btn) { closeFootnotePopover(); return; }
+      openFootnotePopover(btn, text);
+    });
+  });
+
+  const contentEl = article.querySelector('.lecture-content, .pset-content');
+  if (contentEl && usedNums.size && !contentEl.querySelector('.footnotes-list')) {
+    const ol = document.createElement('ol');
+    ol.className = 'footnotes-list';
+    [...usedNums].sort((a, b) => a - b).forEach((n) => {
+      const li = document.createElement('li');
+      li.innerHTML = footnotesArr[n - 1];
+      ol.appendChild(li);
+    });
+    contentEl.appendChild(ol);
+  }
+}
+
+// Dismiss the open popover on outside click, Escape, scroll, or resize —
+// its position is computed once at open time, so anything that could move
+// the marker or change the viewport should close it rather than drift.
+document.addEventListener('click', (e) => {
+  if (!openFnBtn) return;
+  if (e.target === openFnBtn || footnotePopoverEl.contains(e.target)) return;
+  closeFootnotePopover();
+});
+document.addEventListener('scroll', closeFootnotePopover, true);
+window.addEventListener('resize', closeFootnotePopover);
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  closeFootnotePopover();
+  restoreAnyMaximized();
+});
 
 
 /* ============================================================================
@@ -3106,6 +3567,8 @@ function activateTab(tab, { persist = true } = {}) {
 // Single entry point for both initial load and hashchange: try each post
 // type's own deep-link pattern, then plain #lectures / #psets tab links.
 function handleHashRoute() {
+  restoreAnyMaximized();
+  closeFootnotePopover();
   if (openFromHash()) return;
   if (openPsetFromHash()) return;
   if (location.hash === '#lectures') { activateTab('lectures'); return; }
