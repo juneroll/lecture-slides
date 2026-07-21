@@ -11,11 +11,20 @@ README — Industrial Organization & Competition Lecture Site
 ================================================================================
 
 WHAT THIS IS
-A single-file lecture site. Each week is a collapsible post in a
-reverse-chronological feed. Posts can embed live economics simulators
-(Supply & Demand, Monopoly, Cournot/Bertrand, Price Discrimination, Game
-Theory) declaratively — one <div data-sim="..."> per figure, no ids, no
-separate mount registry.
+A single-file course site with two tabs, switched from the sticky HUD bar
+under the masthead: LECTURES (a reverse-chronological feed of collapsible
+weekly posts) and PROBLEM SETS (the same accordion pattern, but each post
+holds individually numbered problems with a "Show solution" reveal).
+Posts in either tab can embed live economics simulators (Supply & Demand,
+Monopoly, Cournot/Bertrand, Price Discrimination, Game Theory)
+declaratively — one <div data-sim="..."> per figure, no ids, no separate
+mount registry.
+
+The HUD (the bar with the tabs) is sticky — it sits inline under the hero
+until you scroll, then pins to the top of the viewport. While pinned, its
+right-hand status readout tracks whichever post is currently scrolled to
+the top of the feed; scroll away from any post and it falls back to a
+plain count of what's in the active tab.
 
 --------------------------------------------------------------------------------
 HOW TO ADD A NEW LECTURE POST
@@ -44,6 +53,44 @@ Blank post to copy:
   },
 
 --------------------------------------------------------------------------------
+HOW TO ADD A NEW PROBLEM SET
+--------------------------------------------------------------------------------
+Find the `PROBLEM_SETS` array in the <script> block (search for
+"PROBLEM SET DATA — EDIT THIS ARRAY"). Same sorting rule as lectures —
+order in the array doesn't matter, it always sorts by `number` descending.
+
+Blank set to copy:
+
+  {
+    id: 'ps2',                       // unique, no spaces — used for DOM ids
+    number: 2,
+    title: 'Set subtitle only — the "PS 2" numbering is added for you',
+    assignedDate: '2026-01-12',      // YYYY-MM-DD
+    dueDate: '2026-01-19',           // YYYY-MM-DD
+    summary: 'One-line teaser shown when the post is collapsed.',
+    topics: ['Topic chip one', 'Topic chip two'],   // optional, omit for none
+    bodyHTML: `
+      <p>Optional preamble/instructions, same plain-HTML rules as a
+      lecture post's bodyHTML. Can also hold <div data-sim="..."> figures.</p>
+    `,
+    problems: [
+      {
+        id: 'p1',                    // unique within this set
+        points: 10,                  // optional — omit to hide the badge
+        prompt: `<p>The question, as plain HTML.</p>`,
+        solution: `<p>The worked answer, hidden behind "Show solution"
+        until the reader clicks it.</p>`
+      },
+      // ...more problems
+    ]
+  },
+
+Each problem gets its own reveal toggle; nothing in `solution` is visible
+until the reader opens it, and it stays open independently of the others
+while the set itself is expanded. A problem's `prompt` or `solution` can
+contain a <div data-sim="..."> figure exactly like a lecture — see below.
+
+--------------------------------------------------------------------------------
 HOW TO EMBED A SIMULATOR (one div, nothing else)
 --------------------------------------------------------------------------------
 Drop a single div anywhere in bodyHTML:
@@ -56,8 +103,10 @@ Drop a single div anywhere in bodyHTML:
 • data-config   optional JSON. Unknown keys are ignored; a typo in the
                 JSON logs a console warning and mounts with defaults.
 • data-caption  optional. Figure numbers are generated automatically as
-                "Figure {lecture.number}.{k} — {your caption}", numbered
-                in document order within the post.
+                "Figure {number}.{k} — {your caption}", numbered in
+                document order within the post. Inside a problem set the
+                prefix reads "Figure PS{number}.{k}" instead, so lecture
+                and problem-set figures never look like the same series.
 
 Simulators mount lazily the first time a post is expanded, and never
 remount (so a simulator keeps its live state when a post is collapsed
@@ -76,7 +125,7 @@ Config keys by simulator (all optional):
                          'stagHunt', rowLabels, colLabels, payoffs
 
 --------------------------------------------------------------------------------
-STORAGE (accordion open/closed state)
+STORAGE (accordion open/closed state, active tab)
 --------------------------------------------------------------------------------
 One flag at the top of the <script> block:
 
@@ -85,16 +134,24 @@ One flag at the top of the <script> block:
 Leave it false inside a Claude.ai artifact — the artifact sandbox throws
 on any access to window.localStorage, so enabling it there breaks the
 page. Set it true only when this file is served from a real web server
-and you want open/closed state to survive reloads. Everything else reads
-and writes through the same storage interface either way.
+and you want open/closed state (and the last-viewed tab) to survive
+reloads. Everything else reads and writes through the same storage
+interface either way, under three keys: `accordionState` (lectures),
+`psetAccordionState` (problem sets), and `activeTab`.
 
 --------------------------------------------------------------------------------
 ALSO WORTH KNOWING
 --------------------------------------------------------------------------------
-• Deep links: share  page.html#post-lec3  — that post auto-expands and
-  scrolls into view on load.
-• "Expand all" in the toolbar also makes browser find (Ctrl/Cmd-F) work
-  across every lecture, since collapsed content is unsearchable.
+• Deep links: share  page.html#post-lec3  for a lecture or
+  page.html#pset-ps2  for a problem set — either switches to the right
+  tab, expands that post, and scrolls it into view on load.
+• "Expand all" in the HUD also makes browser find (Ctrl/Cmd-F) work
+  across every post in the active tab, since collapsed content is
+  unsearchable; it only acts on whichever tab (lectures or problem sets)
+  is currently showing.
+• The HUD's number badges use color to tell the two tabs apart at a
+  glance: maroon "№" for lectures, slate "PS" for problem sets. Same
+  palette everywhere else, just a different accent per collection.
 • Chart color semantics are consistent across all simulators:
   demand = slate, cost/supply/producer surplus/profit = umber,
   consumer surplus = sage, deadweight loss = red, segment 2 = maroon.
@@ -146,7 +203,9 @@ ALSO WORTH KNOWING
   /* Layout */
   --content-width: 760px;
   --radius: 3px;
+  --radius-pill: 999px;
   --shadow-card: 0 1px 2px rgba(28,26,23,0.05), 0 3px 12px rgba(28,26,23,0.04);
+  --shadow-hud: 0 6px 20px rgba(28,26,23,0.09);
 }
 
 * { box-sizing: border-box; }
@@ -243,27 +302,137 @@ a { color: var(--maroon); }
   margin: 0;
 }
 
+.hero-meta {
+  display: flex;
+  gap: 1.5em;
+  margin: 1.4rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+}
+.hero-meta strong {
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------------------------------------------------------------------------
-   Feed toolbar
+   HUD — sticky section switcher (tabs, live reading position, actions)
    --------------------------------------------------------------------------- */
 
-.feed-tools {
+.hud-sentinel { height: 1px; }
+
+.hud {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--rule);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hud.is-pinned {
+  box-shadow: var(--shadow-hud);
+  border-bottom-color: var(--rule-strong);
+}
+
+.hud-inner {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: 1.4rem 1.5rem 0;
+  padding: 0.85rem 1.5rem;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.hud-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-width 0.3s ease, margin 0.3s ease;
+}
+.hud-mark::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--maroon);
+  flex-shrink: 0;
+}
+.hud.is-pinned .hud-mark {
+  opacity: 1;
+  max-width: 220px;
+  margin-right: 0.15rem;
+}
+
+.hud-tabs {
+  position: relative;
+  display: flex;
+  gap: 1.7rem;
+  flex-shrink: 0;
+}
+
+.hud-tab {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  padding: 0.45rem 0.05rem;
+  cursor: pointer;
+}
+.hud-tab:hover { color: var(--ink-soft); }
+.hud-tab.is-active { color: var(--maroon); }
+
+.hud-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--maroon);
+  transition: left 0.25s ease, width 0.25s ease;
+}
+
+.hud-status {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.hud-actions {
+  display: flex;
+  gap: 0.9rem;
   align-items: baseline;
-  gap: 1rem;
+  flex-shrink: 0;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   color: var(--ink-faint);
 }
 
-.ft-actions { display: flex; gap: 0.9rem; align-items: baseline; }
-
-.feed-tools button {
+.hud-btn {
   font: inherit;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -273,8 +442,9 @@ a { color: var(--maroon); }
   border-bottom: 1px solid transparent;
   padding: 0.1rem 0;
   cursor: pointer;
+  white-space: nowrap;
 }
-.feed-tools button:hover { border-bottom-color: var(--maroon); }
+.hud-btn:hover { border-bottom-color: var(--maroon); }
 
 /* ---------------------------------------------------------------------------
    Lecture feed
@@ -293,7 +463,7 @@ a { color: var(--maroon); }
   margin-bottom: 1.1rem;
   box-shadow: var(--shadow-card);
   overflow: hidden;
-  scroll-margin-top: 0.9rem;
+  scroll-margin-top: 5rem; /* clears the sticky HUD when scrolled/deep-linked to */
 }
 
 .lecture-header {
@@ -426,6 +596,252 @@ a { color: var(--maroon); }
   border-radius: 2px;
   padding: 0.15rem 0.45rem;
   margin-bottom: 0.9rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Problem sets — same card/accordion language as lectures, slate accent
+   --------------------------------------------------------------------------- */
+
+.pset-post {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  margin-bottom: 1.1rem;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  scroll-margin-top: 5rem;
+}
+
+.pset-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.1rem;
+  width: 100%;
+  padding: 1.15rem 1.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.pset-header:hover { background: var(--slate-wash); }
+
+.pset-number {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--slate);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  padding: 0.2rem 0.5rem;
+  white-space: nowrap;
+}
+
+.pset-titleblock { min-width: 0; }
+
+.pset-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.18rem;
+  margin: 0 0 0.3rem;
+  color: var(--ink);
+  display: block;
+}
+
+.pset-meta {
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 0.9em;
+  align-items: center;
+}
+
+.due-pill {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--umber);
+  background: var(--umber-wash);
+  border-radius: 2px;
+  padding: 0.15rem 0.45rem;
+}
+
+.pset-summary {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  margin-top: 0.35rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pset-post.expanded .pset-summary { display: none; }
+
+.topic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+.topic-chip {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem 0.55rem;
+}
+
+.pset-chevron {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  color: var(--ink-faint);
+  transition: transform 0.22s ease;
+}
+.pset-post.expanded .pset-chevron { transform: rotate(180deg); color: var(--slate); }
+
+.pset-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+.pset-post.expanded .pset-body { grid-template-rows: 1fr; }
+.pset-body-inner { overflow: hidden; }
+
+.pset-content {
+  padding: 0.25rem 1.35rem 1.6rem;
+  border-top: 1px solid var(--rule);
+  margin-top: 0.1rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.72;
+}
+.pset-content > *:first-child { margin-top: 1.15rem; }
+.pset-content p { margin: 0 0 1rem; color: var(--ink); }
+.pset-content h4 {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  margin: 1.7rem 0 0.6rem;
+  color: var(--slate);
+}
+.pset-content h5 {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  margin: 1.4rem 0 0.5rem;
+}
+.pset-content ul, .pset-content ol { padding-left: 1.3rem; margin: 0 0 1rem; }
+.pset-content li { margin-bottom: 0.45rem; }
+.pset-content blockquote {
+  border-left: 3px solid var(--slate);
+  margin: 1rem 0;
+  padding: 0.3rem 0 0.3rem 1rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.pset-content code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--slate-wash);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+}
+
+/* Individual problems, each with its own solution reveal */
+.problem {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  margin: 1.4rem 0;
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+.problem-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.8em;
+  padding: 0.65rem 1.1rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.problem-num {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.problem-points {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+.problem-prompt {
+  padding: 1.05rem 1.15rem 0.9rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.problem-prompt > *:first-child { margin-top: 0; }
+.problem-prompt > *:last-child { margin-bottom: 0.4rem; }
+
+.solution-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--slate);
+  background: var(--slate-wash);
+  border: none;
+  border-top: 1px dashed var(--rule-strong);
+  padding: 0.55rem 1.15rem;
+  cursor: pointer;
+  text-align: left;
+}
+.solution-toggle:hover { color: var(--maroon); }
+.toggle-chevron {
+  width: 13px; height: 13px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.problem.is-open .toggle-chevron { transform: rotate(180deg); }
+
+.problem-solution {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.24s ease;
+  background: var(--sage-wash);
+}
+.problem.is-open .problem-solution { grid-template-rows: 1fr; }
+.problem-solution-inner { overflow: hidden; }
+.problem-solution-content {
+  padding: 1rem 1.15rem;
+  font-family: var(--font-display);
+  font-size: 0.97rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.problem-solution-content > *:first-child { margin-top: 0; }
+.problem-solution-content > *:last-child { margin-bottom: 0; }
+.problem-solution-content p { margin: 0 0 0.85rem; }
+.problem-solution-content code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--paper-raised);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -710,6 +1126,22 @@ a { color: var(--maroon); }
   .lecture-header { grid-template-columns: auto 1fr; }
   .lecture-chevron { grid-row: 1; grid-column: 2; justify-self: end; }
   .lecture-number { grid-row: 2; grid-column: 1 / 3; width: fit-content; }
+
+  .pset-header { grid-template-columns: auto 1fr; }
+  .pset-chevron { grid-row: 1; grid-column: 2; justify-self: end; }
+  .pset-number { grid-row: 2; grid-column: 1 / 3; width: fit-content; }
+}
+
+@media (max-width: 680px) {
+  .hud-status { display: none; }
+  .hud-mark { display: none; }
+  .hud-inner {
+    gap: 0.5rem 1rem;
+    padding: 0.7rem 1.1rem;
+    flex-wrap: wrap;
+  }
+  .hud-tabs { gap: 1.1rem; }
+  .hero-meta { gap: 1.1em; flex-wrap: wrap; }
 }
 </style>
 </head>
@@ -720,20 +1152,35 @@ a { color: var(--maroon); }
     <p class="eyebrow">Oeconomica · The University of Chicago</p>
     <h1 class="site-title">Industrial Organization and Competition</h1>
     <p class="site-desc">A weekly lecture series on industrial organization theory and antitrust.</p>
+    <p class="hero-meta" data-role="hero-meta"></p>
   </div>
 </header>
 
-<div class="feed-tools">
-  <span data-role="feed-count"></span>
-  <span class="ft-actions">
-    <button type="button" data-role="expand-all">Expand all</button>
-    <span aria-hidden="true">·</span>
-    <button type="button" data-role="collapse-all">Collapse all</button>
-  </span>
-</div>
+<div class="hud-sentinel" id="hud-sentinel" aria-hidden="true"></div>
+<nav class="hud" id="hud" aria-label="Section navigation">
+  <div class="hud-inner">
+    <span class="hud-mark" data-role="hud-mark">IO &amp; Competition</span>
+    <div class="hud-tabs" role="tablist" aria-label="Content sections">
+      <button type="button" class="hud-tab is-active" role="tab" aria-selected="true" aria-controls="feed-lectures" id="tab-lectures" data-tab="lectures" tabindex="0">Lectures</button>
+      <button type="button" class="hud-tab" role="tab" aria-selected="false" aria-controls="feed-psets" id="tab-psets" data-tab="psets" tabindex="-1">Problem Sets</button>
+      <span class="hud-tab-indicator" data-role="hud-tab-indicator" aria-hidden="true"></span>
+    </div>
+    <span class="hud-status" data-role="hud-status" aria-hidden="true"></span>
+    <span class="hud-actions">
+      <button type="button" class="hud-btn" data-role="expand-all">Expand all</button>
+      <span aria-hidden="true">·</span>
+      <button type="button" class="hud-btn" data-role="collapse-all">Collapse all</button>
+    </span>
+  </div>
+</nav>
 
-<main class="feed" id="feed" aria-label="Lecture posts">
-  <!-- Lecture posts are rendered here by JS from the LECTURES array below. -->
+<main class="feed-root" aria-label="Course content">
+  <div class="feed" id="feed-lectures" role="tabpanel" aria-labelledby="tab-lectures">
+    <!-- Lecture posts are rendered here by JS from the LECTURES array below. -->
+  </div>
+  <div class="feed" id="feed-psets" role="tabpanel" aria-labelledby="tab-psets" hidden>
+    <!-- Problem set posts are rendered here by JS from the PROBLEM_SETS array below. -->
+  </div>
 </main>
 
 <script>
@@ -1124,6 +1571,131 @@ const LECTURES = [
 
 
 /* ============================================================================
+   PROBLEM SET DATA — EDIT THIS ARRAY
+   Add new problem sets here. See README at the top of this file for the
+   object shape — each set is a post like a lecture, but holds a `problems`
+   array instead of one long bodyHTML, and each problem hides its solution
+   behind a reveal toggle.
+   ============================================================================ */
+
+const PROBLEM_SETS = [
+  {
+    id: 'ps1',
+    number: 1,
+    title: 'The Competitive Benchmark',
+    assignedDate: '2026-07-20',
+    dueDate: '2026-07-27',
+    summary: 'Supply and demand mechanics, surplus accounting, and the welfare cost of taxes and price controls.',
+    topics: ['Supply & demand', 'Surplus & efficiency', 'Tax incidence', 'Price controls'],
+    bodyHTML: `
+      <p>This set works the competitive benchmark from Lecture 1 by hand, then
+      asks you to check the results against the live simulator. Show your
+      algebra — a correct final number without supporting steps earns partial
+      credit only.</p>
+    `,
+    problems: [
+      {
+        id: 'p1',
+        points: 10,
+        prompt: `
+          <p>A market has demand <code>P = 120 − 2Q</code> and supply
+          <code>P = 20 + 3Q</code>.</p>
+          <p>(a) Solve for the equilibrium price and quantity.<br>
+          (b) Compute consumer surplus and producer surplus at that
+          equilibrium.</p>
+        `,
+        solution: `
+          <p>Setting demand equal to supply: <code>120 − 2Q = 20 + 3Q</code>,
+          so <code>100 = 5Q</code> and <code>Q* = 20</code>. Substituting
+          back, <code>P* = 120 − 2(20) = 80</code> (check against supply:
+          <code>20 + 3(20) = 80</code> ✓).</p>
+          <p><strong>CS</strong> = ½ · 20 · (120 − 80) = <strong>$400</strong>.
+          <strong>PS</strong> = ½ · 20 · (80 − 20) = <strong>$600</strong>.
+          Total surplus is $1,000 — the largest this market can produce, and
+          the benchmark every later distortion in the course gets measured
+          against.</p>
+        `
+      },
+      {
+        id: 'p2',
+        points: 10,
+        prompt: `
+          <p>Continuing from Problem 1, the government imposes a
+          <strong>$10 per-unit tax</strong> collected from sellers.</p>
+          <p>(a) Find the new quantity traded, the price buyers pay, and the
+          price sellers receive.<br>
+          (b) How much of the $10 falls on buyers, and how much on sellers?
+          Why isn't it split evenly?<br>
+          (c) Compute the deadweight loss.</p>
+          <div data-sim="supply-demand"
+               data-config='{"demandIntercept": 120, "demandSlope": 2, "supplyIntercept": 20, "supplySlope": 3}'
+               data-caption="Set the per-unit tax slider to $10 and compare the readouts to your answers above"></div>
+        `,
+        solution: `
+          <p>With wedge <code>Pd − Ps = 10</code>, solving
+          <code>(120 − Pd)/2 = (Pd − 10 − 20)/3</code> gives
+          <code>Pd = $84</code>, <code>Ps = $74</code>, and <code>Q = 18</code>.</p>
+          <p>Buyers pay $4 more than the old $80 equilibrium price; sellers
+          receive $6 less. <strong>Sellers bear the larger share (60%).</strong>
+          Supply is steeper than demand here (slope 3 vs. 2), and the less
+          elastic side of a market always absorbs more of a tax — in this
+          market, that's supply.</p>
+          <p><strong>DWL</strong> = ½ · (20 − 18) · $10 = <strong>$10</strong>.
+          Tax revenue = $10 · 18 = <strong>$180</strong>.</p>
+        `
+      },
+      {
+        id: 'p3',
+        points: 8,
+        prompt: `
+          <p>Instead of a tax, regulators impose a <strong>price ceiling at
+          $50</strong> on the original market from Problem 1.</p>
+          <p>(a) Find quantity demanded and quantity supplied at $50, and say
+          which one actually trades.<br>
+          (b) Compute the size of the shortage and the resulting deadweight
+          loss.</p>
+        `,
+        solution: `
+          <p>At <code>P = 50</code>: <code>Qd = (120 − 50)/2 = 35</code>,
+          <code>Qs = (50 − 20)/3 = 10</code>. The <strong>short side of the
+          market rules</strong> — sellers can't be forced to sell more than
+          they choose to — so only <strong>10 units trade</strong>, leaving a
+          shortage of <strong>25 units</strong> (35 − 10).</p>
+          <p><strong>DWL</strong> = ½ · (20 − 10) · (100 − 50) =
+          <strong>$250</strong>, using demand's willingness-to-pay for the
+          10th unit ($100) against its true marginal cost ($50).</p>
+        `
+      },
+      {
+        id: 'p4',
+        points: 6,
+        prompt: `
+          <p>Stigler called industrial organization "nothing more than"
+          applied price theory; most contemporary textbooks call it the study
+          of imperfect competition. In 3–5 sentences, explain why this course
+          still spends an entire lecture building the perfectly competitive
+          model in detail, given that almost no real market fully satisfies
+          its assumptions.</p>
+        `,
+        solution: `
+          <p><em>Model answer:</em> Perfect competition isn't offered as a
+          description of real markets — it's the reference point that makes
+          every later model legible. Once we know precisely what output,
+          price, and surplus split the competitive benchmark delivers, every
+          subsequent model in the course (monopoly, price discrimination,
+          oligopoly) can be characterized as a specific, measurable departure
+          from that benchmark, with its own wedge and its own
+          deadweight-loss triangle. Without the benchmark, "market power
+          raises price" is just an assertion; with it, it's a comparison with
+          a number attached.</p>
+        `
+      },
+    ]
+  },
+];
+
+
+/* ============================================================================
    FEED ENGINE — accordion rendering, declarative simulator mounting,
    deep links, expand/collapse all
    ============================================================================ */
@@ -1137,16 +1709,23 @@ function formatLectureDate(iso) {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+// Generic alias — the function above predates problem sets but formats any
+// plain YYYY-MM-DD string, so pset code reads for-purpose instead of
+// borrowing something named after lectures.
+const formatDate = formatLectureDate;
+
 const CHEVRON_SVG =
   '<svg class="lecture-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
     '<path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
   '</svg>';
 
-// Mounts every not-yet-mounted [data-sim] element inside a lecture's article.
+// Mounts every not-yet-mounted [data-sim] element inside a post's article —
+// a lecture or a problem set, both pass an object with .id and .number.
 // Runs lazily on first expand; each element mounts exactly once, so a
 // simulator keeps its live state across collapse/re-expand. Figure numbers
-// are assigned in document order within the post.
-function mountSimsIn(article, lecture) {
+// are assigned in document order within the post. figPrefix distinguishes
+// problem-set figures ("Figure PS1.1") from lecture figures ("Figure 1.1").
+function mountSimsIn(article, item, figPrefix = '') {
   const all = article.querySelectorAll('[data-sim]');
   let figNo = 0;
   all.forEach((node) => {
@@ -1158,7 +1737,7 @@ function mountSimsIn(article, lecture) {
     const name = node.dataset.sim;
     const mountFn = SIMS[name];
     if (typeof mountFn !== 'function') {
-      console.warn('Unknown simulator "' + name + '" in lecture ' + lecture.id);
+      console.warn('Unknown simulator "' + name + '" in "' + item.id + '"');
       node.innerHTML = '<p class="sim-error">Unknown simulator "' + name +
         '". Valid names: ' + Object.keys(SIMS).join(', ') + '.</p>';
       return;
@@ -1168,8 +1747,8 @@ function mountSimsIn(article, lecture) {
     if (node.dataset.config) {
       try { config = JSON.parse(node.dataset.config); }
       catch (err) {
-        console.warn('Bad data-config JSON on "' + name + '" in lecture ' + lecture.id +
-          ' — mounting with defaults.', err);
+        console.warn('Bad data-config JSON on "' + name + '" in "' + item.id +
+          '" — mounting with defaults.', err);
       }
     }
 
@@ -1178,7 +1757,7 @@ function mountSimsIn(article, lecture) {
     if (node.dataset.caption) {
       const cap = document.createElement('p');
       cap.className = 'sim-caption';
-      cap.textContent = 'Figure ' + lecture.number + '.' + figNo + ' — ' + node.dataset.caption;
+      cap.textContent = 'Figure ' + figPrefix + item.number + '.' + figNo + ' — ' + node.dataset.caption;
       node.appendChild(cap);
     }
   });
@@ -1199,7 +1778,7 @@ function setExpanded(lecture, expanded, { persist = true } = {}) {
 }
 
 function renderFeed() {
-  const feedEl = document.getElementById('feed');
+  const feedEl = document.getElementById('feed-lectures');
   const sorted = lecturesSorted();
   const mostRecentId = sorted.length ? sorted[0].id : null;
   const storedState = storage.get('accordionState') || {};
@@ -1215,7 +1794,7 @@ function renderFeed() {
     article.id = 'post-' + lecture.id;
 
     article.innerHTML =
-      '<button class="lecture-header" aria-expanded="false" aria-controls="body-' + lecture.id + '" id="header-' + lecture.id + '">' +
+      '<button class="lecture-header" aria-expanded="false" aria-controls="body-' + lecture.id + '" id="header-' + lecture.id + '" data-hud-label="\u2116 ' + lecture.number + ' \u2014 ' + lecture.title + '">' +
         '<span class="lecture-number">\u2116 ' + lecture.number + '</span>' +
         '<span class="lecture-titleblock">' +
           '<span class="lecture-title">' + lecture.title + '</span>' +
@@ -1238,23 +1817,167 @@ function renderFeed() {
 
     if (isExpanded) setExpanded(lecture, true, { persist: false });
   });
-
-  const countEl = document.querySelector('[data-role="feed-count"]');
-  const n = LECTURES.length;
-  countEl.textContent = n + (n === 1 ? ' lecture posted' : ' lectures posted');
 }
 
 // Deep links: page.html#post-lec3 expands that post and scrolls to it.
+// Returns true if the hash matched a lecture, so a shared router knows
+// whether to try the problem-set pattern next.
 function openFromHash() {
   const m = location.hash.match(/^#post-(.+)$/);
-  if (!m) return;
+  if (!m) return false;
   const lecture = LECTURES.find(l => l.id === m[1]);
-  if (!lecture) return;
+  if (!lecture) return false;
+  activateTab('lectures', { persist: false });
   setExpanded(lecture, true);
   requestAnimationFrame(() => {
     const article = document.getElementById('post-' + lecture.id);
     if (article) article.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+  return true;
+}
+
+
+/* ============================================================================
+   PSET FEED ENGINE — same accordion pattern as lectures, plus per-problem
+   solution reveals. Deliberately parallel to the block above rather than
+   sharing one generic engine, so either can be edited without touching
+   the other.
+   ============================================================================ */
+
+function psetsSorted() {
+  return [...PROBLEM_SETS].sort((a, b) => b.number - a.number);
+}
+
+function totalPoints(pset) {
+  return pset.problems.reduce((sum, p) => sum + (p.points || 0), 0);
+}
+
+const PSET_CHEVRON_SVG =
+  '<svg class="pset-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+    '<path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '</svg>';
+
+const TOGGLE_CHEVRON_SVG =
+  '<svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+    '<path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '</svg>';
+
+// Wires each problem's "Show solution" toggle exactly once. Called lazily
+// on first expand (same lazy-mount philosophy as mountSimsIn), guarded by
+// a data attribute so re-expanding a set never double-binds a listener.
+function wireProblemToggles(article) {
+  article.querySelectorAll('.problem').forEach((problemEl) => {
+    const btn = problemEl.querySelector('.solution-toggle');
+    if (!btn || btn.dataset.wired) return;
+    btn.dataset.wired = '1';
+    const label = btn.querySelector('.toggle-label');
+    btn.addEventListener('click', () => {
+      const open = problemEl.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', String(open));
+      if (label) label.textContent = open ? 'Hide solution' : 'Show solution';
+    });
+  });
+}
+
+function setPsetExpanded(pset, expanded, { persist = true } = {}) {
+  const article = document.getElementById('pset-post-' + pset.id);
+  if (!article) return;
+  const headerBtn = document.getElementById('pset-header-' + pset.id);
+  article.classList.toggle('expanded', expanded);
+  headerBtn.setAttribute('aria-expanded', String(expanded));
+  if (expanded) {
+    mountSimsIn(article, pset, 'PS');
+    wireProblemToggles(article);
+  }
+  if (persist) {
+    const stored = storage.get('psetAccordionState') || {};
+    stored[pset.id] = expanded;
+    storage.set('psetAccordionState', stored);
+  }
+}
+
+function renderPsetFeed() {
+  const feedEl = document.getElementById('feed-psets');
+  const sorted = psetsSorted();
+  const mostRecentId = sorted.length ? sorted[0].id : null;
+  const storedState = storage.get('psetAccordionState') || {};
+
+  feedEl.innerHTML = '';
+
+  sorted.forEach((pset) => {
+    const hasStored = Object.prototype.hasOwnProperty.call(storedState, pset.id);
+    const isExpanded = hasStored ? !!storedState[pset.id] : (pset.id === mostRecentId);
+
+    const problemsHTML = pset.problems.map((prob, idx) =>
+      '<div class="problem" id="problem-' + pset.id + '-' + prob.id + '">' +
+        '<div class="problem-head">' +
+          '<span class="problem-num">Problem ' + (idx + 1) + '</span>' +
+          (prob.points ? '<span class="problem-points">' + prob.points + ' pts</span>' : '') +
+        '</div>' +
+        '<div class="problem-prompt">' + prob.prompt + '</div>' +
+        '<button type="button" class="solution-toggle" aria-expanded="false">' +
+          '<span class="toggle-label">Show solution</span>' +
+          TOGGLE_CHEVRON_SVG +
+        '</button>' +
+        '<div class="problem-solution">' +
+          '<div class="problem-solution-inner">' +
+            '<div class="problem-solution-content">' + prob.solution + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    ).join('');
+
+    const chipsHTML = (pset.topics || []).map(t => '<span class="topic-chip">' + t + '</span>').join('');
+
+    const article = document.createElement('article');
+    article.className = 'pset-post';
+    article.id = 'pset-post-' + pset.id;
+
+    article.innerHTML =
+      '<button class="pset-header" aria-expanded="false" aria-controls="pset-body-' + pset.id + '" id="pset-header-' + pset.id + '" data-hud-label="PS ' + pset.number + ' \u2014 ' + pset.title + '">' +
+        '<span class="pset-number">PS ' + pset.number + '</span>' +
+        '<span class="pset-titleblock">' +
+          '<span class="pset-title">' + pset.title + '</span>' +
+          '<span class="pset-meta">' +
+            '<span>Assigned ' + formatDate(pset.assignedDate) + '</span>' +
+            '<span class="due-pill">Due ' + formatDate(pset.dueDate) + '</span>' +
+            '<span>' + totalPoints(pset) + ' pts total</span>' +
+          '</span>' +
+          '<span class="pset-summary">' + pset.summary + '</span>' +
+          (chipsHTML ? '<span class="topic-chips">' + chipsHTML + '</span>' : '') +
+        '</span>' +
+        PSET_CHEVRON_SVG +
+      '</button>' +
+      '<div class="pset-body" id="pset-body-' + pset.id + '" role="region" aria-labelledby="pset-header-' + pset.id + '">' +
+        '<div class="pset-body-inner">' +
+          '<div class="pset-content">' + pset.bodyHTML + problemsHTML + '</div>' +
+        '</div>' +
+      '</div>';
+
+    feedEl.appendChild(article);
+
+    article.querySelector('.pset-header').addEventListener('click', () => {
+      setPsetExpanded(pset, !article.classList.contains('expanded'));
+    });
+
+    if (isExpanded) setPsetExpanded(pset, true, { persist: false });
+  });
+}
+
+// Deep links: page.html#pset-ps2 expands that set and scrolls to it.
+// Mirrors openFromHash above; same true/false contract for the router.
+function openPsetFromHash() {
+  const m = location.hash.match(/^#pset-(.+)$/);
+  if (!m) return false;
+  const pset = PROBLEM_SETS.find(p => p.id === m[1]);
+  if (!pset) return false;
+  activateTab('psets', { persist: false });
+  setPsetExpanded(pset, true);
+  requestAnimationFrame(() => {
+    const article = document.getElementById('pset-post-' + pset.id);
+    if (article) article.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  return true;
 }
 
 
@@ -2320,20 +3043,155 @@ const SIMS = {
 
 
 /* ============================================================================
+   HUD — tab switching, sticky-pinned shadow, live reading-position status
+   ============================================================================ */
+
+const hudEl = document.getElementById('hud');
+const hudStatusEl = document.querySelector('[data-role="hud-status"]');
+const hudIndicatorEl = document.querySelector('[data-role="hud-tab-indicator"]');
+const hudTabButtons = Array.from(document.querySelectorAll('.hud-tab'));
+const hudTabsEl = document.querySelector('.hud-tabs');
+const feedPanels = {
+  lectures: document.getElementById('feed-lectures'),
+  psets: document.getElementById('feed-psets'),
+};
+
+let activeTab = 'lectures';
+let positionObserver = null;
+
+function positionTabIndicator() {
+  const btn = hudTabButtons.find(b => b.dataset.tab === activeTab);
+  if (!btn || !hudIndicatorEl) return;
+  hudIndicatorEl.style.left = btn.offsetLeft + 'px';
+  hudIndicatorEl.style.width = btn.offsetWidth + 'px';
+}
+
+function updateHudIdleStatus() {
+  if (!hudStatusEl) return;
+  if (activeTab === 'lectures') {
+    const n = LECTURES.length;
+    hudStatusEl.textContent = n + (n === 1 ? ' lecture posted' : ' lectures posted');
+  } else {
+    const n = PROBLEM_SETS.length;
+    hudStatusEl.textContent = n + (n === 1 ? ' problem set posted' : ' problem sets posted');
+  }
+}
+
+// Tracks whichever post header sits nearest the top of the viewport, inside
+// a thin band just under the HUD, and mirrors its label into hudStatusEl.
+// Falls back to the idle count whenever nothing in that band is in view —
+// above the feed, between posts, or below the last one.
+function watchReadingPosition(tab) {
+  if (positionObserver) positionObserver.disconnect();
+  if (!hudStatusEl || typeof IntersectionObserver === 'undefined') return;
+
+  const root = feedPanels[tab];
+  const selector = tab === 'lectures' ? '.lecture-header' : '.pset-header';
+  const headers = root ? root.querySelectorAll(selector) : [];
+  updateHudIdleStatus();
+  if (!headers.length) return;
+
+  positionObserver = new IntersectionObserver((entries) => {
+    const visible = entries.filter(e => e.isIntersecting);
+    if (visible.length === 0) { updateHudIdleStatus(); return; }
+    const topMost = visible.reduce((a, b) =>
+      a.boundingClientRect.top < b.boundingClientRect.top ? a : b);
+    const label = topMost.target.dataset.hudLabel;
+    if (label) hudStatusEl.textContent = label;
+  }, { rootMargin: '-10% 0px -80% 0px', threshold: 0 });
+
+  headers.forEach(h => positionObserver.observe(h));
+}
+
+function activateTab(tab, { persist = true } = {}) {
+  if (tab !== 'lectures' && tab !== 'psets') return;
+  activeTab = tab;
+  hudTabButtons.forEach((b) => {
+    const isActive = b.dataset.tab === tab;
+    b.classList.toggle('is-active', isActive);
+    b.setAttribute('aria-selected', String(isActive));
+    b.tabIndex = isActive ? 0 : -1;
+  });
+  if (feedPanels.lectures) feedPanels.lectures.hidden = tab !== 'lectures';
+  if (feedPanels.psets) feedPanels.psets.hidden = tab !== 'psets';
+  positionTabIndicator();
+  watchReadingPosition(tab);
+  if (persist) storage.set('activeTab', tab);
+}
+
+// Single entry point for both initial load and hashchange: try each post
+// type's own deep-link pattern, then plain #lectures / #psets tab links.
+function handleHashRoute() {
+  if (openFromHash()) return;
+  if (openPsetFromHash()) return;
+  if (location.hash === '#lectures') { activateTab('lectures'); return; }
+  if (location.hash === '#psets') { activateTab('psets'); return; }
+}
+
+hudTabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+});
+
+if (hudTabsEl) {
+  hudTabsEl.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const idx = hudTabButtons.findIndex(b => b.dataset.tab === activeTab);
+    const nextIdx = e.key === 'ArrowRight'
+      ? (idx + 1) % hudTabButtons.length
+      : (idx - 1 + hudTabButtons.length) % hudTabButtons.length;
+    const nextBtn = hudTabButtons[nextIdx];
+    nextBtn.focus();
+    activateTab(nextBtn.dataset.tab);
+  });
+}
+
+window.addEventListener('resize', positionTabIndicator);
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(positionTabIndicator);
+}
+
+
+/* ============================================================================
    BOOT
    ============================================================================ */
 
 renderFeed();
+renderPsetFeed();
+
+// Sticky/pinned shadow: watch a 1px sentinel placed just above the HUD.
+// Once it scrolls out of view, the HUD's own position:sticky has taken
+// hold, so switch on the shadow and compact brand mark.
+const hudSentinelEl = document.getElementById('hud-sentinel');
+if (hudSentinelEl && hudEl && typeof IntersectionObserver !== 'undefined') {
+  new IntersectionObserver(
+    ([entry]) => hudEl.classList.toggle('is-pinned', !entry.isIntersecting),
+    { threshold: 0 }
+  ).observe(hudSentinelEl);
+}
 
 document.querySelector('[data-role="expand-all"]').addEventListener('click', () => {
-  lecturesSorted().forEach(l => setExpanded(l, true));
+  if (activeTab === 'lectures') lecturesSorted().forEach(l => setExpanded(l, true));
+  else psetsSorted().forEach(p => setPsetExpanded(p, true));
 });
 document.querySelector('[data-role="collapse-all"]').addEventListener('click', () => {
-  lecturesSorted().forEach(l => setExpanded(l, false));
+  if (activeTab === 'lectures') lecturesSorted().forEach(l => setExpanded(l, false));
+  else psetsSorted().forEach(p => setPsetExpanded(p, false));
 });
 
-window.addEventListener('hashchange', openFromHash);
-openFromHash();
+const storedTab = storage.get('activeTab');
+activateTab(storedTab === 'psets' ? 'psets' : 'lectures', { persist: false });
+
+const heroMetaEl = document.querySelector('[data-role="hero-meta"]');
+if (heroMetaEl) {
+  const nLec = LECTURES.length, nPset = PROBLEM_SETS.length;
+  heroMetaEl.innerHTML =
+    '<span><strong>' + nLec + '</strong> ' + (nLec === 1 ? 'lecture' : 'lectures') + '</span>' +
+    '<span><strong>' + nPset + '</strong> ' + (nPset === 1 ? 'problem set' : 'problem sets') + '</span>';
+}
+
+window.addEventListener('hashchange', handleHashRoute);
+handleHashRoute();
 </script>
 </body>
 </html>
